@@ -1,2 +1,6 @@
+.gitignore
 .python-version
 *.pyc
+.idea/
+thesis/.idea/
+
