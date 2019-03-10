@@ -2,21 +2,15 @@ version: '3.6'
 
 services:
   db:
-    image: postgres:10.1-alpine
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
+    image: postgres:9.6
   web:
     build: .
-    command: python ./evs_bids/manage.py migrate --noinput
-    command: python ./evs_bids/manage.py runserver 0.0.0.0:8000
+    image: thesis
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      - .:/thesis
+      - ./thesis:/opt/thesis
     ports:
-      - "8000:8000"
+      - 8000:8000
     environment:
-      - SECRET_KEY=changemeinprod
-    depends_on:
-      - db
-
-volumes:
-  postgres_data:
+      - SECRET_KEY=secret
+      - DJANGO_SETTINGS_MODULE=evs_bids.settings
