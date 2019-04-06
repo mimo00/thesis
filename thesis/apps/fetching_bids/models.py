@@ -13,7 +13,7 @@ class Node(models.Model):
     address = models.CharField(max_length=200)
 
 
-class Generator(models.Model):
+class Localization(models.Model):
     address = models.CharField(max_length=200)
     node = models.ForeignKey(Node, on_delete=models.CASCADE)
 
@@ -25,15 +25,15 @@ class Bid(models.Model):
         (HOME_HOME, 'home-home'),
         (HOME_WORK_HOME, 'home-work-home'),
     )
-    date = models.DateTimeField()
+    date = models.DateTimeField(auto_now=True)
     mode = models.CharField(max_length=3, choices=TYPES)
     electric_vehicle = models.ForeignKey(ElectricVehicle, on_delete=models.CASCADE)
 
 
-class ChargingGenerator(models.Model):
+class ChargingLocalization(models.Model):
     arrival_time = models.DateTimeField()
     departure_time = models.DateTimeField()
     charge_percent = models.DecimalField(max_digits=5, decimal_places=2)
     expected_charge_percent = models.DecimalField(max_digits=5, decimal_places=2)
-    bid = models.ForeignKey(Bid, on_delete=models.CASCADE)
-    place = models.ForeignKey(Generator, on_delete=models.CASCADE)
+    bid = models.ForeignKey(Bid, on_delete=models.CASCADE, related_name="charging_localizations")
+    localization = models.ForeignKey(Localization, on_delete=models.CASCADE)
