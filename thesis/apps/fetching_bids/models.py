@@ -8,6 +8,9 @@ class ElectricVehicle(models.Model):
     max_charging_power = models.IntegerField()
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f"ElectricVehicle #{self.pk} owner {self.user}"
+
 
 class Node(models.Model):
     address = models.CharField(max_length=200)
@@ -28,6 +31,9 @@ class Bid(models.Model):
     date = models.DateTimeField(auto_now=True)
     mode = models.CharField(max_length=3, choices=TYPES)
     electric_vehicle = models.ForeignKey(ElectricVehicle, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Bid #{self.pk} mode {self.mode}"
 
 
 class ChargingLocalization(models.Model):
