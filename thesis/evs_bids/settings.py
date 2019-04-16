@@ -133,3 +133,5 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     )
 }
+
+DEADLINE_HOUR_TO_SEND_BID = 23
