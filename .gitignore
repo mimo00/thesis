@@ -1,6 +1,9 @@
 .gitignore
+.gitignore.swp
 .python-version
 *.pyc
 .idea/
-thesis/.idea/
-
+thesis/db_diagram.png
+scripts/
+Materialy/
+thesis/examples/
