@@ -21,6 +21,7 @@ from rest_framework.authtoken import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     url(r'', include("apps.fetching_bids.urls")),
+    url(r'', include("apps.bids_decisions.urls")),
 ]
 
 urlpatterns += [
