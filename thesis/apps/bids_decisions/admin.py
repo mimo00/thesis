@@ -8,7 +8,7 @@ class ChargingLocalizationDecisionInline(admin.TabularInline):
 
 
 class BidDecisionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'decision', 'bid')
+    list_display = ('id', 'bid')
 
     inlines = [
         ChargingLocalizationDecisionInline
@@ -16,7 +16,7 @@ class BidDecisionAdmin(admin.ModelAdmin):
 
 
 class AggregatorDecisionAdmin(admin.ModelAdmin):
-    list_display = ('id',  'decision', 'decision_date', 'receive_date')
+    list_display = ('id', 'decision_date', 'receive_date')
 
 
 admin.site.register(models.BidDecision, BidDecisionAdmin)

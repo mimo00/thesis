@@ -6,7 +6,6 @@ from apps.fetching_bids.models import Bid, ChargingLocalization
 class AggregatorDecision(models.Model):
     decision_date = models.DateField(unique=True)
     receive_date = models.DateTimeField()
-    decision = models.BooleanField()
 
 
 class BidDecision(models.Model):
@@ -15,6 +14,7 @@ class BidDecision(models.Model):
 
 
 class ChargingLocalizationDecision(models.Model):
+    decision = models.BooleanField()
     bid_decision = models.ForeignKey(BidDecision, on_delete=models.CASCADE,
                                      related_name="charging_localization_decisions")
     charging_localization = models.OneToOneField(ChargingLocalization, on_delete=models.CASCADE)
