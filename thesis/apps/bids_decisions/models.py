@@ -6,6 +6,9 @@ from apps.fetching_bids.models import Bid, ChargingLocalization
 class AggregatorDecision(models.Model):
     decision_date = models.DateField(unique=True)
     receive_date = models.DateTimeField()
+    energy_coverage = models.DecimalField(max_digits=5, decimal_places=2)
+    hour_coverage = models.DecimalField(max_digits=5, decimal_places=2)
+    energy_loss = models.DecimalField(max_digits=5, decimal_places=2)
 
 
 class BidDecision(models.Model):

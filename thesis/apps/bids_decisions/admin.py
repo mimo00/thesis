@@ -16,7 +16,7 @@ class BidDecisionAdmin(admin.ModelAdmin):
 
 
 class AggregatorDecisionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'decision_date', 'receive_date')
+    list_display = ('id', 'decision_date', 'receive_date', 'energy_coverage', 'hour_coverage', 'energy_loss')
 
 
 admin.site.register(models.BidDecision, BidDecisionAdmin)
