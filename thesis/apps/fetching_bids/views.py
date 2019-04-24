@@ -1,7 +1,11 @@
+import datetime
+
+from django.shortcuts import render
 from rest_framework import mixins
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.viewsets import GenericViewSet
 
+from apps.fetching_bids.models import Bid
 from apps.fetching_bids.serializers import BidSerializer
 
 
@@ -14,4 +18,6 @@ class BidViewSet(mixins.CreateModelMixin, GenericViewSet):
         super().perform_create(serializer)
 
 
-
+def auction_detail(request):
+    number_of_today_bids = Bid.objects.filter(date__date=datetime.datetime.now().date()).count()
+    return render(request, 'fetching/detail.html', {'number_of_today_bids': number_of_today_bids})

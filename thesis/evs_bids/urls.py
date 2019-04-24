@@ -15,8 +15,11 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
-from django.urls import path, include
-from rest_framework.authtoken import views
+from django.urls import path, include, re_path
+from rest_framework.authtoken import views as auth_views
+from django.contrib.staticfiles import views
+
+from evs_bids import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,5 +28,10 @@ urlpatterns = [
 ]
 
 urlpatterns += [
-    url(r'^api-token-auth/', views.obtain_auth_token)
+    url(r'^api-token-auth/', auth_views.obtain_auth_token)
 ]
+
+if settings.DEBUG:
+    urlpatterns += [
+        re_path(r'^static/(?P<path>.*)$', views.serve),
+    ]
