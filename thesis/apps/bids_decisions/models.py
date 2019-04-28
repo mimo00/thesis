@@ -15,6 +15,6 @@ class ChargingLocalizationDecision(models.Model):
     decision = models.ForeignKey(AggregatorDecision, on_delete=models.CASCADE,
                                  related_name="charging_localization_decisions")
     charging_localization = models.OneToOneField(ChargingLocalization, on_delete=models.CASCADE)
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
+    start_time = models.DateTimeField(blank=True, null=True)
+    end_time = models.DateTimeField(blank=True, null=True)
     coverage = models.DecimalField(max_digits=5, decimal_places=2)

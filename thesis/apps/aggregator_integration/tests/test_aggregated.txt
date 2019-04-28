@@ -1,0 +1,40 @@
+{
+    "disaggregatedTripsData": [{
+            "data": {
+                "id": 1,
+                "localization": 1,
+                "plugInSchedule": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
+                "battery": {
+                    "batteryProfile": {
+                        "hourPercentageCharge": 10.0,
+                        "capacity": 100.0
+                    },
+                    "inputEnergyLevel": 10.0,
+                    "outputEnergyLevel": 99.99
+                }
+            },
+            "coverage": 0.0,
+            "chargeHours": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        }, {
+            "data": {
+                "id": 2,
+                "localization": 1,
+                "plugInSchedule": [1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                "battery": {
+                    "batteryProfile": {
+                        "hourPercentageCharge": 10.0,
+                        "capacity": 100.0
+                    },
+                    "inputEnergyLevel": 10.0,
+                    "outputEnergyLevel": 99.99
+                }
+            },
+            "coverage": 50.0,
+            "chargeHours": [0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        }
+    ],
+    "totalNumberOfSchemas": 2,
+    "totalEnergyCoverage": 10.34,
+    "totalHourCoverage": 14.23,
+    "totalEnergyLoss": 2.45
+}
