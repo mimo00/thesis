@@ -1,9 +1,10 @@
 from rest_framework.routers import SimpleRouter
 
-from apps.bids_decisions.views import BidDecisionViewSet
+from apps.bids_decisions.views import ChargingLocalizationDecisionViewSet
 
 router = SimpleRouter()
-router.register(r"bid-decisions", BidDecisionViewSet, basename="bid_decisions")
+router.register(r"charging-localization-decision", ChargingLocalizationDecisionViewSet,
+                basename="charging_localization_decisions")
 
 
 urlpatterns = router.urls
