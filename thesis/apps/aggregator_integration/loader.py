@@ -3,6 +3,7 @@ import datetime
 import marshmallow
 from marshmallow import fields, post_load, ValidationError
 
+from apps.aggregator_integration.time_utils import get_index_range, get_date_range
 from apps.bids_decisions.models import AggregatorDecision, ChargingLocalizationDecision
 from apps.fetching_bids.models import ChargingLocalization
 
@@ -15,9 +16,9 @@ class ChargingLocalizationDecisionSchema(marshmallow.Schema):
     @post_load
     def create(self, data) -> ChargingLocalizationDecision:
         charging_localization = self.get_charging_localization(data["data"])
-        start_time, end_time = self.get_datetimes(data["chargeHours"], charging_localization.arrival_time)
-        return ChargingLocalizationDecision(coverage=data["coverage"], start_time=start_time, end_time=end_time,
-                                            charging_localization=charging_localization)
+        date_range = get_date_range(data["chargeHours"], charging_localization.arrival_time)
+        return ChargingLocalizationDecision(coverage=data["coverage"], start_time=date_range.start,
+                                            end_time=date_range.end, charging_localization=charging_localization)
 
     def get_charging_localization(self, data):
         arrival_hour, departure_hour = self.get_hours(data["plugInSchedule"]["schedule"])
@@ -25,26 +26,11 @@ class ChargingLocalizationDecisionSchema(marshmallow.Schema):
             bid__electric_vehicle=data["id"], arrival_time__hour__lte=arrival_hour, departure_time__hour__gte=departure_hour)
 
     def get_hours(self, charge_hours):
-        ACTIVE_NUM = 1
-        if ACTIVE_NUM in charge_hours:
-            first_index = charge_hours.index(ACTIVE_NUM)
-            charge_hours.reverse()
-            last_index = len(charge_hours) - 1 - charge_hours.index(ACTIVE_NUM)
-            return first_index, last_index
+        index_range = get_index_range(charge_hours)
+        if not index_range.is_empty:
+            return index_range.start, index_range.end
         else:
             raise ValidationError("Nor valid time schedule")
-
-    def get_datetimes(self, charge_hours, date):
-        ACTIVE_NUM = 1
-        if ACTIVE_NUM in charge_hours:
-            first_index = charge_hours.index(ACTIVE_NUM)
-            charge_hours.reverse()
-            last_index = len(charge_hours) - 1 - charge_hours.index(ACTIVE_NUM)
-            start_time = datetime.datetime(year=date.year, month=date.month, day=date.day, hour=first_index, tzinfo=date.tzinfo)
-            end_time = datetime.datetime(year=date.year, month=date.month, day=date.day, hour=last_index+1, tzinfo=date.tzinfo)
-            return start_time, end_time
-        else:
-            return None, None
 
 
 class AggregatorDecisionSchema(marshmallow.Schema):
