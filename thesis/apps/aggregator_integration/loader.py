@@ -1,7 +1,7 @@
 import datetime
 
 import marshmallow
-from marshmallow import fields, post_load
+from marshmallow import fields, post_load, ValidationError
 
 from apps.bids_decisions.models import AggregatorDecision, ChargingLocalizationDecision
 from apps.fetching_bids.models import ChargingLocalization
@@ -20,7 +20,19 @@ class ChargingLocalizationDecisionSchema(marshmallow.Schema):
                                             charging_localization=charging_localization)
 
     def get_charging_localization(self, data):
-        return ChargingLocalization.objects.get(id=data["id"])
+        arrival_hour, departure_hour = self.get_hours(data["plugInSchedule"]["schedule"])
+        return ChargingLocalization.objects.get(
+            bid__electric_vehicle=data["id"], arrival_time__hour__lte=arrival_hour, departure_time__hour__gte=departure_hour)
+
+    def get_hours(self, charge_hours):
+        ACTIVE_NUM = 1
+        if ACTIVE_NUM in charge_hours:
+            first_index = charge_hours.index(ACTIVE_NUM)
+            charge_hours.reverse()
+            last_index = len(charge_hours) - 1 - charge_hours.index(ACTIVE_NUM)
+            return first_index, last_index
+        else:
+            raise ValidationError("Nor valid time schedule")
 
     def get_datetimes(self, charge_hours, date):
         ACTIVE_NUM = 1

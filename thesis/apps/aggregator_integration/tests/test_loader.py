@@ -4,21 +4,31 @@ import pytest
 from pytz import UTC
 
 from apps.aggregator_integration.loader import AggregatorDecisionSchema
-from apps.fetching_bids.factories import ChargingLocalizationFactory
+from apps.fetching_bids.factories import ChargingLocalizationFactory, ElectricVehicleFactory
 
 
 @pytest.mark.django_db
 class TestLoading:
     def test_loading_data(self):
-        test_date = datetime(year=2019, month=4, day=15, hour=16, minute=0, tzinfo=UTC)
-        ch_l_1 = ChargingLocalizationFactory(arrival_time=test_date)
-        ch_l_2 = ChargingLocalizationFactory(arrival_time=test_date)
+        test_arrival_1 = datetime(year=2019, month=4, day=15, hour=17, minute=3, tzinfo=UTC)
+        test_departure_1 = datetime(year=2019, month=4, day=15, hour=23, minute=20, tzinfo=UTC)
+        test_arrival_2 = datetime(year=2019, month=4, day=15, hour=1, minute=10, tzinfo=UTC)
+        test_departure_2 = datetime(year=2019, month=4, day=15, hour=6, minute=20, tzinfo=UTC)
+        ev = ElectricVehicleFactory()
+        ch_l_1 = ChargingLocalizationFactory(
+            arrival_time=test_arrival_1, departure_time=test_departure_1, bid__electric_vehicle=ev)
+        ch_l_2 = ChargingLocalizationFactory(
+            arrival_time=test_arrival_2, departure_time=test_departure_2, bid__electric_vehicle=ev)
         data = {
             "disaggregatedTripsData": [{
                     "data": {
-                        'id': ch_l_1.id,
+                        'id': ev.id,
                         'localization': 1,
-                        'plugInSchedule': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
+                        'plugInSchedule': {
+                            'schedule': [
+                                False, False, False, False, False, False, False, False, False, False, False, False,
+                                False, False, False, False, False, False, True, True, True, True, True, True],
+                        },
                         'battery': {
                             'batteryProfile': {
                                 'hourPercentageCharge': 10.0,
@@ -32,9 +42,14 @@ class TestLoading:
                     "chargeHours": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                 }, {
                     "data": {
-                        'id': ch_l_2.id,
+                        'id': ev.id,
                         'localization': 1,
-                        'plugInSchedule': [1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        'plugInSchedule': {
+                            'schedule': [
+                                False, True, True, True, True, True, False, False, False, False, False, False,
+                                False, False, False, False, False, False, False, False, False, False, False, False
+                            ],
+                        },
                         'battery': {
                             'batteryProfile': {
                                 'hourPercentageCharge': 10.0,
