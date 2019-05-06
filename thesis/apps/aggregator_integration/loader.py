@@ -1,7 +1,8 @@
-import datetime
+from datetime import datetime
 
 import marshmallow
 from marshmallow import fields, post_load, ValidationError
+from pytz import UTC
 
 from apps.aggregator_integration.time_utils import get_index_range, get_date_range
 from apps.bids_decisions.models import AggregatorDecision, ChargingLocalizationDecision
@@ -22,8 +23,10 @@ class ChargingLocalizationDecisionSchema(marshmallow.Schema):
 
     def get_charging_localization(self, data):
         arrival_hour, departure_hour = self.get_hours(data["plugInSchedule"]["schedule"])
+        now = datetime.now(tz=UTC)
         return ChargingLocalization.objects.get(
-            bid__electric_vehicle=data["id"], arrival_time__hour__lte=arrival_hour, departure_time__hour__gte=departure_hour)
+            bid__electric_vehicle=data["id"], arrival_time__hour__lte=arrival_hour,
+            departure_time__hour__gte=departure_hour, bid__date__date=now)
 
     def get_hours(self, charge_hours):
         index_range = get_index_range(charge_hours)
@@ -37,6 +40,7 @@ class AggregatorDecisionSchema(marshmallow.Schema):
     totalEnergyCoverage = fields.Float(required=True)
     totalHourCoverage = fields.Float(required=True)
     totalEnergyLoss = fields.Float(required=True)
+    totalNumberOfSchemas = fields.Integer(required=True)
     disaggregatedTripsData = fields.List(fields.Nested(ChargingLocalizationDecisionSchema()))
 
     @post_load

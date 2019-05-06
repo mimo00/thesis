@@ -8,5 +8,5 @@ pytest-django
 factory_boy
 freezegun
 django-extensions==2.1.5
-marshmallow
+marshmallow==3.0.0rc1
 Faker

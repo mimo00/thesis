@@ -7,7 +7,6 @@ from freezegun import freeze_time
 
 from apps.aggregator_integration.generator import AggregatorInputGenerator, TripStop
 from apps.fetching_bids.factories import BidFactory, ChargingLocalizationFactory, ElectricVehicleFactory
-from apps.fetching_bids.models import Bid
 
 test_date = datetime(year=2019, month=4, day=15, hour=16, minute=30, second=34, tzinfo=UTC)
 DAY = timedelta(days=1)
@@ -43,7 +42,7 @@ class TestAggregatorInputGenerator:
                                     departure_time=datetime(year=2019, month=7, day=24, hour=23, minute=59),
                                     charge_percent=10.00, expected_charge_percent=99.99, bid=bid)
         generator = AggregatorInputGenerator(date=test_date)
-        data = generator.generate().data
+        data = generator.generate()
         assert data == {
             "tripsData": [
                 {

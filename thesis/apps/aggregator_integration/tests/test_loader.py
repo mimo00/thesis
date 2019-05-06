@@ -69,7 +69,7 @@ class TestLoading:
             "totalHourCoverage": 14.23,
             "totalEnergyLoss": 2.45
         }
-        decision, charging_localization_decisions = AggregatorDecisionSchema().load(data).data
+        decision, charging_localization_decisions = AggregatorDecisionSchema().load(data)
         assert decision.energy_coverage == 10.34
         assert decision.hour_coverage == 14.23
         assert decision.energy_loss == 2.45
