@@ -17,7 +17,7 @@ class TestTripStop:
     def test_generating_plug_in_schedule(self):
         start_date = datetime(year=2019, month=4, day=15, hour=6, minute=30, second=0, tzinfo=UTC)
         end_date = datetime(year=2019, month=4, day=15, hour=15, minute=30, second=0, tzinfo=UTC)
-        trip_stop = TripStop(start_date=start_date, end_date=end_date, localization=Mock(), battery=Mock())
+        trip_stop = TripStop(id=1, start_date=start_date, end_date=end_date, battery=Mock())
         assert trip_stop.plugInSchedule == [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0]
 
 
@@ -46,31 +46,30 @@ class TestAggregatorInputGenerator:
         data = generator.generate().data
         assert data == {
             "tripsData": [
-                [
-                    {
-                        'localization': 0,
-                        'plugInSchedule': [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                        'battery': {
-                            'batteryProfile': {
-                                'hourPercentageCharge': 10.0,
-                                'capacity': 100.0
-                            },
-                            'inputEnergyLevel': 20.0,
-                            'outputEnergyLevel': 70.0}
+                {
+                    'plugInSchedule': [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    'battery': {
+                        'batteryProfile': {
+                            'hourPercentageCharge': 10.0,
+                            'capacity': 100.0
+                        },
+                        'inputEnergyLevel': 20.0,
+                        'outputEnergyLevel': 70.0
                     },
-                    {
-                        'localization': 1,
-                        'plugInSchedule': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
-                        'battery': {
-                            'batteryProfile': {
-                                'hourPercentageCharge': 10.0,
-                                'capacity': 100.0
-                            },
-                            'inputEnergyLevel': 10.0,
-                            'outputEnergyLevel': 99.99
-                        }
-                    }
-                ]
+                    "id": ev.id
+                },
+                {
+                    'plugInSchedule': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
+                    'battery': {
+                        'batteryProfile': {
+                            'hourPercentageCharge': 10.0,
+                            'capacity': 100.0
+                        },
+                        'inputEnergyLevel': 10.0,
+                        'outputEnergyLevel': 99.99
+                    },
+                    "id": ev.id
+                }
             ]
         }
 

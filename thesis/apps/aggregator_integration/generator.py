@@ -23,13 +23,13 @@ class BatterySchema(marshmallow.Schema):
 
 
 class ChargingLocalizationSchema(marshmallow.Schema):
-    localization = fields.Integer(required=True)
+    id = fields.Integer(required=True)
     battery = fields.Nested(BatterySchema, required=True)
     plugInSchedule = fields.List(fields.Integer(), required=True)
 
 
 class TripDataSchema(marshmallow.Schema):
-    tripsData = fields.List(fields.Nested(ChargingLocalizationSchema, many=True))
+    tripsData = fields.Nested(ChargingLocalizationSchema, many=True)
 
 
 def get_beginning_of_day(date):
@@ -51,7 +51,7 @@ class Battery:
 
 @attr.s
 class TripStop:
-    localization = attr.ib()
+    id: int = attr.ib()
     battery: Battery = attr.ib()
     start_date: datetime = attr.ib()
     end_date: datetime = attr.ib()
@@ -74,7 +74,7 @@ class AggregatorInputGenerator:
         bids = self.get_bids()
         output_bids = []
         for bid in bids:
-            output_bids.append(self.generate_trip_data(bid))
+            output_bids = output_bids + self.generate_trip_data(bid)
         trips_data = {"tripsData": output_bids}
         schema = TripDataSchema()
         return schema.dump(trips_data)
@@ -99,7 +99,7 @@ class AggregatorInputGenerator:
         for index, charging_localization in enumerate(bid.charging_localizations.all()):
             battery = Battery(inputEnergyLevel=charging_localization.charge_percent, batteryProfile=battery_profile,
                               outputEnergyLevel=charging_localization.expected_charge_percent)
-            trip_stop = TripStop(localization=index, battery=battery, start_date=charging_localization.arrival_time,
+            trip_stop = TripStop(id=charging_localization.bid.electric_vehicle.id, battery=battery, start_date=charging_localization.arrival_time,
                                  end_date=charging_localization.departure_time)
             trip_data.append(trip_stop)
         return trip_data
