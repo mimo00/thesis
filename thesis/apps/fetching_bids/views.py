@@ -1,10 +1,11 @@
 import datetime
 
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from rest_framework import mixins
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.viewsets import GenericViewSet
 
+from apps.aggregator_integration.services import generate_decision
 from apps.fetching_bids.models import Bid
 from apps.fetching_bids.serializers import BidSerializer
 
@@ -21,3 +22,11 @@ class BidViewSet(mixins.CreateModelMixin, GenericViewSet):
 def auction_detail(request):
     number_of_today_bids = Bid.objects.filter(date__date=datetime.datetime.now().date()).count()
     return render(request, 'fetching/detail.html', {'number_of_today_bids': number_of_today_bids})
+
+
+def trigger_aggregator(request):
+    try:
+        generate_decision()
+        return render(request, 'aggregation/success.html')
+    except Exception:
+        return render(request, 'aggregation/fail.html')
