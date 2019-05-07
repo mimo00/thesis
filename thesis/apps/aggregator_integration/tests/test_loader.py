@@ -64,7 +64,7 @@ class TestLoading:
                 },
 
             ],
-            "totalNumberOfSchemas": 2,
+            "totalNumberOfSchemes": 2,
             "totalEnergyCoverage": 10.34,
             "totalHourCoverage": 14.23,
             "totalEnergyLoss": 2.45

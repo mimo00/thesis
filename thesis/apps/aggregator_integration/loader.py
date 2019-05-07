@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import marshmallow
-from marshmallow import fields, post_load, ValidationError
+from marshmallow import fields, post_load, ValidationError, EXCLUDE
 from pytz import UTC
 
 from apps.aggregator_integration.time_utils import get_index_range, get_date_range
@@ -40,8 +40,8 @@ class AggregatorDecisionSchema(marshmallow.Schema):
     totalEnergyCoverage = fields.Float(required=True)
     totalHourCoverage = fields.Float(required=True)
     totalEnergyLoss = fields.Float(required=True)
-    totalNumberOfSchemas = fields.Integer(required=True)
-    disaggregatedTripsData = fields.List(fields.Nested(ChargingLocalizationDecisionSchema()))
+    totalNumberOfSchemes = fields.Integer(required=True)
+    disaggregatedTripsData = fields.List(fields.Nested(ChargingLocalizationDecisionSchema(unknown=EXCLUDE)))
 
     @post_load
     def create(self, data):

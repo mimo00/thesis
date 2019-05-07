@@ -141,3 +141,13 @@ REST_FRAMEWORK = {
 }
 
 DEADLINE_HOUR_TO_SEND_BID = 23
+
+
+AGGREGATOR_SIMULATION = "/opt/thesis/aggregator_simulation/aggregator.jar"
+TMP_DATA_DIR = "/tmp"
+DUMP_TRIPS_DATA_FILE = os.path.join(TMP_DATA_DIR, "trips_data.json")
+AGGREGATION_NAME = "aggregation"
+AGGREGATION_PATH = os.path.join(TMP_DATA_DIR, AGGREGATION_NAME)
+ENERGY_MARKET = os.path.join(TMP_DATA_DIR, "energy")
+DISAGGREGATION_NAME = "disaggregation"
+DISAGGREGATION_PATH = os.path.join(TMP_DATA_DIR, DISAGGREGATION_NAME)
