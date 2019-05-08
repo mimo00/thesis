@@ -6,7 +6,7 @@ from faker import Faker
 from freezegun import freeze_time
 from pytz import UTC
 
-from apps.fetching_bids.models import Node, Localization, ElectricVehicle, Bid, ChargingLocalization
+from apps.schedules.models import Node, ChargingPoint, ElectricVehicle, Schedule, PointSchedule
 
 
 class DemoGenerator:
@@ -18,55 +18,52 @@ class UserDemo(DemoGenerator):
     def generate(self):
         User = get_user_model()
         User.objects.create_superuser("root", "root@root.com", "root")
-        self.generate_users()
-
-    def generate_users(self):
         names = ["wilder", "joshua", "parker", "ortiz", "kownacki"]
-        User = get_user_model()
         for name in names:
             user = User.objects.create_user(name, name + "@gmail.com", name)
-            ElectricVehicle.objects.create(
-                max_charging_power=randrange(10, 30, 1), user=user,
-                min_battery_capacity=randrange(10, 40, 5), max_battery_capacity=randrange(50, 150, 5)
-            )
+            for _ in range(3):
+                ElectricVehicle.objects.create(
+                    max_charging_power=randrange(10, 30), user=user,
+                    min_battery_capacity=randrange(5, 10), max_battery_capacity=randrange(15, 20)
+                )
 
 
-class LocalizationDemo(DemoGenerator):
+class ChargingPointDemo(DemoGenerator):
     NUMBER_OF_NODES = 5
-    NUMBER_OF_LOCALIZATIONS_FOR_NODE = 2
+    NUMBER_OF_pointS_FOR_NODE = 2
 
     def generate(self):
         myFactory = Faker()
         for _ in range(self.NUMBER_OF_NODES):
             node = Node.objects.create(address=myFactory.state())
-            for _ in range(self.NUMBER_OF_LOCALIZATIONS_FOR_NODE):
-                Localization.objects.create(address=myFactory.address(), node=node)
+            for _ in range(self.NUMBER_OF_pointS_FOR_NODE):
+                ChargingPoint.objects.create(address=myFactory.address(), node=node)
 
 
-class FetchingBidsDemo(DemoGenerator):
-    NUMBERS_OF_DAYS_FOR_BIDS = 5
+class FetchingSchedulesDemo(DemoGenerator):
+    NUMBERS_OF_DAYS_FOR_SCHEDULES = 5
 
     def generate(self):
         electric_vehicles = ElectricVehicle.objects.all()
         date_ = datetime.datetime.now(tz=UTC)
         DAY = datetime.timedelta(days=1)
-        for _ in range(self.NUMBERS_OF_DAYS_FOR_BIDS):
+        for _ in range(self.NUMBERS_OF_DAYS_FOR_SCHEDULES):
             for electric_vehicle in electric_vehicles:
-                self.generate_bid(date_, electric_vehicle)
+                self.generate_schedule(date_, electric_vehicle)
             date_ = date_ - DAY
 
-    def generate_bid(self, date, ev):
-        localizations = Localization.objects.all()
-        home, work = choices(localizations, k=2)
+    def generate_schedule(self, date, ev):
+        points = ChargingPoint.objects.all()
+        home, work = choices(points, k=2)
         times = self.generate_times(date) #list of 6 dates
         with freeze_time(date):
-            bid = Bid.objects.create(mode=Bid.HOME_WORK_HOME, electric_vehicle=ev)
-        ChargingLocalization.objects.create(arrival_time=times[0], departure_time=times[1], charge_percent=50.00,
-                                            expected_charge_percent=70.30, bid=bid, localization=home)
-        ChargingLocalization.objects.create(arrival_time=times[2], departure_time=times[3], charge_percent=20.00,
-                                            expected_charge_percent=90.00, bid=bid, localization=work)
-        ChargingLocalization.objects.create(arrival_time=times[4], departure_time=times[5], charge_percent=20.00,
-                                            expected_charge_percent=100.00, bid=bid, localization=home)
+            schedule = Schedule.objects.create(mode=Schedule.HOME_WORK_HOME, electric_vehicle=ev)
+        PointSchedule.objects.create(arrival_time=times[0], departure_time=times[1], charge_percent=50.00,
+                                     expected_charge_percent=70.00, schedule=schedule, point=home)
+        PointSchedule.objects.create(arrival_time=times[2], departure_time=times[3], charge_percent=50.00,
+                                     expected_charge_percent=60.00, schedule=schedule, point=work)
+        PointSchedule.objects.create(arrival_time=times[4], departure_time=times[5], charge_percent=30.00,
+                                     expected_charge_percent=40.00, schedule=schedule, point=home)
 
     def generate_times(self, date):
         times = []
@@ -83,7 +80,7 @@ class FetchingBidsDemo(DemoGenerator):
         return hours
 
 
-demos = [UserDemo, LocalizationDemo, FetchingBidsDemo]
+demos = [UserDemo, ChargingPointDemo, FetchingSchedulesDemo]
 
 
 def run():

@@ -5,8 +5,8 @@ from marshmallow import fields, post_load, ValidationError, EXCLUDE
 from pytz import UTC
 
 from apps.aggregator_integration.time_utils import get_index_range, get_date_range
-from apps.bids_decisions.models import AggregatorDecision, ChargingLocalizationDecision
-from apps.fetching_bids.models import ChargingLocalization
+from apps.decisions.models import AggregatorDecision, PointScheduleDecision
+from apps.schedules.models import PointSchedule
 
 
 class ChargingLocalizationDecisionSchema(marshmallow.Schema):
@@ -15,18 +15,18 @@ class ChargingLocalizationDecisionSchema(marshmallow.Schema):
     data = fields.Dict()
 
     @post_load
-    def create(self, data) -> ChargingLocalizationDecision:
-        charging_localization = self.get_charging_localization(data["data"])
-        date_range = get_date_range(data["chargeHours"], charging_localization.arrival_time)
-        return ChargingLocalizationDecision(coverage=data["coverage"], start_time=date_range.start,
-                                            end_time=date_range.end, charging_localization=charging_localization)
+    def create(self, data) -> PointScheduleDecision:
+        point_schedule = self.get_point_schedule(data["data"])
+        date_range = get_date_range(data["chargeHours"], point_schedule.arrival_time)
+        return PointScheduleDecision(coverage=data["coverage"], start_time=date_range.start,
+                                             end_time=date_range.end, point_schedule=point_schedule)
 
-    def get_charging_localization(self, data):
+    def get_point_schedule(self, data):
         arrival_hour, departure_hour = self.get_hours(data["plugInSchedule"]["schedule"])
         now = datetime.now(tz=UTC)
-        return ChargingLocalization.objects.get(
-            bid__electric_vehicle=data["id"], arrival_time__hour__lte=arrival_hour,
-            departure_time__hour__gte=departure_hour, bid__date__date=now)
+        return PointSchedule.objects.get(
+            schedule__electric_vehicle=data["id"], arrival_time__hour__lte=arrival_hour,
+            departure_time__hour__gte=departure_hour, schedule__date__date=now)
 
     def get_hours(self, charge_hours):
         index_range = get_index_range(charge_hours)

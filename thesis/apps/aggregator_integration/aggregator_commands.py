@@ -1,15 +1,15 @@
 import subprocess
 
-from evs_bids.settings import AGGREGATOR_SIMULATION, DUMP_TRIPS_DATA_FILE, AGGREGATION_PATH, ENERGY_MARKET, \
+from aggregator.settings import AGGREGATOR_SIMULATION, DUMP_TRIPS_DATA_FILE, AGGREGATION_PATH, ENERGY_MARKET, \
     DISAGGREGATION_PATH
 
 
 def aggregate():
-    subprocess.run(["java", "-jar", AGGREGATOR_SIMULATION, "-a", "-m", "SCTW", "-i", DUMP_TRIPS_DATA_FILE, "-o", AGGREGATION_PATH, "-O", "8000"])
+    subprocess.run(["java", "-jar", AGGREGATOR_SIMULATION, "-a", "-m", "SCTW", "-i", DUMP_TRIPS_DATA_FILE, "-o", AGGREGATION_PATH, "-O", "1000"])
 
 
 def generate_energy_market():
-    subprocess.run(["java", "-jar", AGGREGATOR_SIMULATION, "-g", "-e", "-i", AGGREGATION_PATH+".json", "-o", ENERGY_MARKET, "-C", "120"])
+    subprocess.run(["java", "-jar", AGGREGATOR_SIMULATION, "-g", "-e", "-i", AGGREGATION_PATH+".json", "-o", ENERGY_MARKET, "-C", "40"])
 
 
 def disaggregation():

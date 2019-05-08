@@ -13,4 +13,4 @@ services:
       - 8000:8000
     environment:
       - SECRET_KEY=secret
-      - DJANGO_SETTINGS_MODULE=evs_bids.settings
+      - DJANGO_SETTINGS_MODULE=aggregator.settings

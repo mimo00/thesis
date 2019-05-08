@@ -1,0 +1,11 @@
+#!/bin/bash -e
+
+# go back to root dir
+cd "${0%/*}/.."
+
+echo "Removing database"
+docker-compose stop db
+docker-compose rm -vf db
+
+echo "Initializing database"
+./scripts/run-init

@@ -1,0 +1,15 @@
+#!/bin/bash -e
+
+# go back to root dir
+cd "${0%/*}/.."
+
+echo "Running tests"
+
+docker-compose up -d db
+
+# if you need to recreate test database, use:
+# run-test --create-db
+echo $PWD
+docker-compose run \
+  -e PYTHONUNBUFFERED=0 \
+  --rm web pytest --reuse-db ${@:1}
