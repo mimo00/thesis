@@ -35,7 +35,7 @@ class ChargingPointDemo(DemoGenerator):
     def generate(self):
         myFactory = Faker()
         for _ in range(self.NUMBER_OF_NODES):
-            node = Node.objects.create(address=myFactory.state())
+            node = Node.objects.create(name=myFactory.state())
             for _ in range(self.NUMBER_OF_pointS_FOR_NODE):
                 ChargingPoint.objects.create(address=myFactory.address(), node=node)
 

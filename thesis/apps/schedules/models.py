@@ -13,7 +13,7 @@ class ElectricVehicle(models.Model):
 
 
 class Node(models.Model):
-    address = models.CharField(max_length=200)
+    name = models.CharField(max_length=200)
 
 
 class ChargingPoint(models.Model):
