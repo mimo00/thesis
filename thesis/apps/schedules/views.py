@@ -20,9 +20,9 @@ class ScheduleViewSet(mixins.CreateModelMixin, GenericViewSet):
 
 
 def auction_detail(request):
-    number_of_today_schedule = Schedule.objects.filter(date__date=datetime.datetime.now().date()).count()
+    number_of_today_schedules = Schedule.objects.filter(date__date=datetime.datetime.now().date()).count()
     return render(request, 'fetching/detail.html',
-                  {'number_of_today_schedule': number_of_today_schedule})
+                  {'number_of_today_schedules': number_of_today_schedules})
 
 
 def trigger_aggregator(request):
