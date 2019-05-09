@@ -8,13 +8,3 @@ scripts/run-migrate
 
 echo "Generating demo"
 scripts/run-manage runscript generate_demo
-
-echo "Installing hooks..."
-pre-commit install
-
-echo "Adding entry to /etc/hosts..."
-grep -q "*.localhost" /etc/hosts || sudo sed '$ a\127.0.0.1\*.localhost' -i /etc/hosts
-
-echo -e "All set! Now you can start development using \e[1mdocker-compose up\\e[0m."
-echo -e "Use \e[1mhttp://localhost:8000 \\e[0mfor development tenant"
-
