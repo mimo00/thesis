@@ -26,6 +26,10 @@ class UserDemo(DemoGenerator):
                     max_charging_power=randrange(10, 30), user=user,
                     min_battery_capacity=randrange(5, 10), max_battery_capacity=randrange(15, 20)
                 )
+                ElectricVehicle.objects.create(
+                    max_charging_power=randrange(10, 30), user=user,
+                    min_battery_capacity=randrange(5, 10), max_battery_capacity=randrange(15, 20)
+                )
 
 
 class ChargingPointDemo(DemoGenerator):
