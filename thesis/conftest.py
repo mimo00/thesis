@@ -2,7 +2,7 @@ import pytest
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from apps.fetching_bids.factories import UserFactory
+from apps.schedules.factories import UserFactory
 
 
 @pytest.fixture(scope="session")

@@ -4,7 +4,7 @@ import pytest
 from pytz import UTC
 
 from apps.aggregator_integration.loader import AggregatorDecisionSchema
-from apps.fetching_bids.factories import ChargingLocalizationFactory, ElectricVehicleFactory
+from apps.schedules.factories import PointScheduleFactory, ElectricVehicleFactory
 
 
 @pytest.mark.django_db
@@ -15,10 +15,10 @@ class TestLoading:
         test_arrival_2 = datetime(year=2019, month=4, day=15, hour=1, minute=10, tzinfo=UTC)
         test_departure_2 = datetime(year=2019, month=4, day=15, hour=6, minute=20, tzinfo=UTC)
         ev = ElectricVehicleFactory()
-        ch_l_1 = ChargingLocalizationFactory(
-            arrival_time=test_arrival_1, departure_time=test_departure_1, bid__electric_vehicle=ev)
-        ch_l_2 = ChargingLocalizationFactory(
-            arrival_time=test_arrival_2, departure_time=test_departure_2, bid__electric_vehicle=ev)
+        ch_l_1 = PointScheduleFactory(
+            arrival_time=test_arrival_1, departure_time=test_departure_1, schedule__electric_vehicle=ev)
+        ch_l_2 = PointScheduleFactory(
+            arrival_time=test_arrival_2, departure_time=test_departure_2, schedule__electric_vehicle=ev)
         data = {
             "disaggregatedTripsData": [{
                     "data": {
@@ -69,14 +69,14 @@ class TestLoading:
             "totalHourCoverage": 14.23,
             "totalEnergyLoss": 2.45
         }
-        decision, charging_localization_decisions = AggregatorDecisionSchema().load(data)
+        decision, point_schedule_decisions = AggregatorDecisionSchema().load(data)
         assert decision.energy_coverage == 10.34
         assert decision.hour_coverage == 14.23
         assert decision.energy_loss == 2.45
-        assert len(charging_localization_decisions) == 2
-        assert charging_localization_decisions[0].charging_localization == ch_l_1
-        assert charging_localization_decisions[0].start_time == None
-        assert charging_localization_decisions[1].charging_localization == ch_l_2
-        assert charging_localization_decisions[1].start_time == datetime(year=2019, month=4, day=15, hour=3, minute=0, tzinfo=UTC)
-        assert charging_localization_decisions[1].end_time == datetime(year=2019, month=4, day=15, hour=6, minute=0, tzinfo=UTC)
+        assert len(point_schedule_decisions) == 2
+        assert point_schedule_decisions[0].point_schedule == ch_l_1
+        assert point_schedule_decisions[0].start_time == None
+        assert point_schedule_decisions[1].point_schedule == ch_l_2
+        assert point_schedule_decisions[1].start_time == datetime(year=2019, month=4, day=15, hour=3, minute=0, tzinfo=UTC)
+        assert point_schedule_decisions[1].end_time == datetime(year=2019, month=4, day=15, hour=6, minute=0, tzinfo=UTC)
 

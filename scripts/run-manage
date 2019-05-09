@@ -1,0 +1,12 @@
+#!/bin/bash -e
+
+# go back to root dir
+cd "${0%/*}/.."
+
+echo "Running manage"
+
+ARGS="${@:1}"
+
+docker-compose up -d db
+# chown to fix permission problems
+docker-compose run --rm web wait-for-it.sh -s -t 60 db:5432 -- bash -c "python manage.py $ARGS && chown -R 1000:1000 ."
