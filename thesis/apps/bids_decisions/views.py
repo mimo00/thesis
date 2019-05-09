@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from dateutil.tz import UTC
-from rest_framework import mixins, status
+from rest_framework import mixins, status, serializers
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
@@ -38,7 +38,9 @@ class ChargingLocalizationDecisionViewSet(mixins.ListModelMixin, GenericViewSet)
             return Response({"error": f"There is no decision for day {next_day}"}, status=status.HTTP_404_NOT_FOUND)
 
     def get_electric_vehicle(self):
-        electric_vehicle_id = self.request.query_params['electric_vehicle']
+        electric_vehicle_id = self.request.query_params.get('electric_vehicle', None)
+        if not electric_vehicle_id:
+            raise serializers.ValidationError("You need to specify electric_vehicle id.")
         electric_vehicle = ElectricVehicle.objects.get(id=electric_vehicle_id)
         if not electric_vehicle.user == self.request.user:
             error = f"You are trying to get bid for electric vehicle: {electric_vehicle_id} but it is not assigned for your account"
