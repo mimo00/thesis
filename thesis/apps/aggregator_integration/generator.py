@@ -7,8 +7,8 @@ import attr
 from marshmallow import fields
 
 # serialization Obj -> JSON
-from apps.fetching_bids.models import Bid
-from evs_bids.settings import DEADLINE_HOUR_TO_SEND_BID
+from apps.schedules.models import Schedule
+from aggregator.settings import DEADLINE_HOUR_TO_SEND_SCHEDULE
 
 
 class BatteryProfileSchema(marshmallow.Schema):
@@ -71,35 +71,35 @@ class AggregatorInputGenerator:
         self.date = date
 
     def generate(self):
-        bids = self.get_bids()
-        output_bids = []
-        for bid in bids:
-            output_bids = output_bids + self.generate_trip_data(bid)
-        trips_data = {"tripsData": output_bids}
+        schedules = self.get_schedules()
+        output_schedules = []
+        for schedule in schedules:
+            output_schedules = output_schedules + self.generate_trip_data(schedule)
+        trips_data = {"tripsData": output_schedules}
         schema = TripDataSchema()
         return schema.dump(trips_data)
 
-    def get_bids(self):
+    def get_schedules(self):
         start_date, end_date = self._get_date_range(self.date)
-        bids = (Bid.objects.filter(date__range=(start_date, end_date))
-                .select_related('electric_vehicle').prefetch_related('charging_localizations'))
-        return bids
+        schedules = (Schedule.objects.filter(date__range=(start_date, end_date))
+                              .select_related('electric_vehicle').prefetch_related('point_schedules'))
+        return schedules
 
     @staticmethod
     def _get_date_range(date):
         start_date = datetime(year=date.year, month=date.month, day=date.day, hour=0, minute=0, second=0)
-        end_date = datetime(year=date.year, month=date.month, day=date.day, hour=DEADLINE_HOUR_TO_SEND_BID,
+        end_date = datetime(year=date.year, month=date.month, day=date.day, hour=DEADLINE_HOUR_TO_SEND_SCHEDULE,
                             minute=0, second=0)
         return start_date, end_date
 
-    def generate_trip_data(self, bid):
+    def generate_trip_data(self, schedule):
         trip_data = []
-        battery_profile = BatteryProfile(capacity=bid.electric_vehicle.max_battery_capacity,
-                                         hourPercentageCharge=bid.electric_vehicle.max_charging_power)
-        for index, charging_localization in enumerate(bid.charging_localizations.all()):
-            battery = Battery(inputEnergyLevel=charging_localization.charge_percent, batteryProfile=battery_profile,
-                              outputEnergyLevel=charging_localization.expected_charge_percent)
-            trip_stop = TripStop(id=charging_localization.bid.electric_vehicle.id, battery=battery, start_date=charging_localization.arrival_time,
-                                 end_date=charging_localization.departure_time)
+        battery_profile = BatteryProfile(capacity=schedule.electric_vehicle.max_battery_capacity,
+                                         hourPercentageCharge=schedule.electric_vehicle.max_charging_power)
+        for index, point_schedule in enumerate(schedule.point_schedules.all()):
+            battery = Battery(inputEnergyLevel=point_schedule.charge_percent, batteryProfile=battery_profile,
+                              outputEnergyLevel=point_schedule.expected_charge_percent)
+            trip_stop = TripStop(id=point_schedule.schedule.electric_vehicle.id, battery=battery, start_date=point_schedule.arrival_time,
+                                 end_date=point_schedule.departure_time)
             trip_data.append(trip_stop)
         return trip_data

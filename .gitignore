@@ -4,7 +4,6 @@
 .idea/
 thesis/.idea/
 Materialy/
-scripts/
 thesis/db_diagram.png
 thesis/examples/
 thesis/.pre-commit-config.yaml

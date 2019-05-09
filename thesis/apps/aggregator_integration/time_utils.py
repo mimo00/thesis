@@ -20,6 +20,7 @@ class DateRange:
 
 
 def get_index_range(schedule: List[int]) -> IndexRange:
+    assert len(schedule) == 24, "Schedule length should be 24 !"
     if ACTIVE_NUM in schedule:
         start = schedule.index(ACTIVE_NUM)
         schedule.reverse()
@@ -32,10 +33,11 @@ def get_index_range(schedule: List[int]) -> IndexRange:
 def get_date_range(schedule: List[int], date: datetime):
     index_range = get_index_range(schedule)
     if not index_range.is_empty:
+        end = index_range.end + 1 if index_range.end < 23 else 23
         start_time = datetime.datetime(
             year=date.year, month=date.month, day=date.day, hour=index_range.start, tzinfo=date.tzinfo)
         end_time = datetime.datetime(
-            year=date.year, month=date.month, day=date.day, hour=index_range.end + 1, tzinfo=date.tzinfo)
+            year=date.year, month=date.month, day=date.day, hour=end, tzinfo=date.tzinfo)
         return DateRange(start=start_time, end=end_time, is_empty=False)
     else:
         return DateRange(start=None, end=None, is_empty=False)

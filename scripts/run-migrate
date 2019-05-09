@@ -1,0 +1,7 @@
+#!/bin/bash -e
+
+# go back to root dir
+cd "${0%/*}/.."
+
+
+./scripts/run-manage migrate ${@:1}
