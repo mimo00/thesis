@@ -5,7 +5,7 @@ from marshmallow import fields, post_load, ValidationError, EXCLUDE
 from pytz import UTC
 
 from apps.aggregator_integration.time_utils import get_index_range, get_date_range
-from apps.decisions.models import AggregatorDecision, PointScheduleDecision
+from apps.decisions.models import AggregatorDecision, PointScheduleDecision, AggregatorNodeDecision
 from apps.schedules.models import PointSchedule
 
 
@@ -36,7 +36,7 @@ class ChargingLocalizationDecisionSchema(marshmallow.Schema):
             raise ValidationError("Nor valid time schedule")
 
 
-class AggregatorDecisionSchema(marshmallow.Schema):
+class AggregatorNodeDecisionSchema(marshmallow.Schema):
     totalEnergyCoverage = fields.Float(required=True)
     totalHourCoverage = fields.Float(required=True)
     totalEnergyLoss = fields.Float(required=True)
@@ -45,6 +45,7 @@ class AggregatorDecisionSchema(marshmallow.Schema):
 
     @post_load
     def create(self, data):
-        decision = AggregatorDecision(energy_loss=data["totalEnergyLoss"], energy_coverage=data["totalEnergyCoverage"],
-                                      hour_coverage=data["totalHourCoverage"])
+        decision = AggregatorNodeDecision(is_success=True, energy_loss=data["totalEnergyLoss"],
+                                          energy_coverage=data["totalEnergyCoverage"],
+                                          hour_coverage=data["totalHourCoverage"])
         return decision, data['disaggregatedTripsData']

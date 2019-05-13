@@ -4,7 +4,7 @@ from apps.decisions.models import PointScheduleDecision
 from apps.schedules.serializers import PointScheduleSerializer
 
 
-class ChargingLocalizationDecisionSerializer(serializers.ModelSerializer):
+class ChargingSchedulesDecisionSerializer(serializers.ModelSerializer):
     point_schedule = PointScheduleSerializer()
 
     class Meta:

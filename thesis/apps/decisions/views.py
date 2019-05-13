@@ -9,14 +9,14 @@ from rest_framework.viewsets import GenericViewSet
 
 from apps.decisions import filters
 from apps.decisions.models import PointScheduleDecision, AggregatorDecision
-from apps.decisions.serializers import ChargingLocalizationDecisionSerializer
+from apps.decisions.serializers import ChargingSchedulesDecisionSerializer
 from apps.schedules.models import ElectricVehicle
 
 
-class ChargingLocalizationDecisionViewSet(mixins.ListModelMixin, GenericViewSet):
+class ChargingSchedulesDecisionViewSet(mixins.ListModelMixin, GenericViewSet):
     queryset = PointScheduleDecision.objects.all()
-    serializer_class = ChargingLocalizationDecisionSerializer
-    filterset_class = filters.ChargingLocalizationDecisionFilter
+    serializer_class = ChargingSchedulesDecisionSerializer
+    filterset_class = filters.ChargingSchedulesDecisionFilter
 
     def get_queryset(self):
         return super().get_queryset().filter(point_schedule__schedule__electric_vehicle=self.get_electric_vehicle().id)
@@ -28,7 +28,7 @@ class ChargingLocalizationDecisionViewSet(mixins.ListModelMixin, GenericViewSet)
             aggregator_decision = AggregatorDecision.objects.get(decision_date=next_day)
             point_schedule_decision = PointScheduleDecision.objects.filter(
                 point_schedule__schedule__electric_vehicle=self.get_electric_vehicle().id,
-                decision=aggregator_decision)
+                decision__decision=aggregator_decision)
             if len(point_schedule_decision) == 0:
                 error = {"error": f"There is no schedule for electric vehicle {request.query_params['electric_vehicle']}"}
                 return Response(error, status=status.HTTP_404_NOT_FOUND)
