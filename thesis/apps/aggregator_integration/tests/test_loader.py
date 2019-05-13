@@ -3,7 +3,7 @@ from datetime import datetime
 import pytest
 from pytz import UTC
 
-from apps.aggregator_integration.loader import AggregatorDecisionSchema
+from apps.aggregator_integration.loader import AggregatorNodeDecisionSchema
 from apps.schedules.factories import PointScheduleFactory, ElectricVehicleFactory
 
 
@@ -69,7 +69,7 @@ class TestLoading:
             "totalHourCoverage": 14.23,
             "totalEnergyLoss": 2.45
         }
-        decision, point_schedule_decisions = AggregatorDecisionSchema().load(data)
+        decision, point_schedule_decisions = AggregatorNodeDecisionSchema().load(data)
         assert decision.energy_coverage == 10.34
         assert decision.hour_coverage == 14.23
         assert decision.energy_loss == 2.45

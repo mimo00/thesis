@@ -7,7 +7,8 @@ import attr
 from marshmallow import fields
 
 # serialization Obj -> JSON
-from apps.schedules.models import Schedule
+from apps.aggregator_integration.time_utils import get_schedule
+from apps.schedules.models import Schedule, Node, PointSchedule
 from aggregator.settings import DEADLINE_HOUR_TO_SEND_SCHEDULE
 
 
@@ -22,14 +23,14 @@ class BatterySchema(marshmallow.Schema):
     batteryProfile = fields.Nested(BatteryProfileSchema)
 
 
-class ChargingLocalizationSchema(marshmallow.Schema):
+class TripStopSchema(marshmallow.Schema):
     id = fields.Integer(required=True)
     battery = fields.Nested(BatterySchema, required=True)
     plugInSchedule = fields.List(fields.Integer(), required=True)
 
 
 class TripDataSchema(marshmallow.Schema):
-    tripsData = fields.Nested(ChargingLocalizationSchema, many=True)
+    tripsData = fields.Nested(TripStopSchema, many=True)
 
 
 def get_beginning_of_day(date):
@@ -58,48 +59,33 @@ class TripStop:
 
     @property
     def plugInSchedule(self) -> List[int]:
-        schedule = []
-        date = get_beginning_of_day(self.start_date)
-        for i in range(24):
-            schedule.append(1) if self.start_date < date < self.end_date else schedule.append(0)
-            date += timedelta(hours=1)
-        return schedule
+        return get_schedule(self.start_date.hour, self.end_date.hour)
 
 
-class AggregatorInputGenerator:
-    def __init__(self, date: datetime):
-        self.date = date
+def get_trip_data(start_date: datetime, end_date: datetime, node: Node):
+    trips_stops = get_trip_stops(start_date, end_date, node)
+    return TripDataSchema().dump({"tripsData": trips_stops})
 
-    def generate(self):
-        schedules = self.get_schedules()
-        output_schedules = []
-        for schedule in schedules:
-            output_schedules = output_schedules + self.generate_trip_data(schedule)
-        trips_data = {"tripsData": output_schedules}
-        schema = TripDataSchema()
-        return schema.dump(trips_data)
 
-    def get_schedules(self):
-        start_date, end_date = self._get_date_range(self.date)
-        schedules = (Schedule.objects.filter(date__range=(start_date, end_date))
-                              .select_related('electric_vehicle').prefetch_related('point_schedules'))
-        return schedules
+def get_trip_stops(start_date: datetime, end_date: datetime, node: Node) -> List[TripStop]:
+    trip_stops = []
+    point_schedules = (PointSchedule.objects
+                       .filter(point__node=node, schedule__date__range=(start_date, end_date))
+                       .select_related('schedule__electric_vehicle'))
+    for point_schedule in point_schedules:
+        trip_stops.append(get_trip_stop(point_schedule))
+    return trip_stops
 
-    @staticmethod
-    def _get_date_range(date):
-        start_date = datetime(year=date.year, month=date.month, day=date.day, hour=0, minute=0, second=0)
-        end_date = datetime(year=date.year, month=date.month, day=date.day, hour=DEADLINE_HOUR_TO_SEND_SCHEDULE,
-                            minute=0, second=0)
-        return start_date, end_date
 
-    def generate_trip_data(self, schedule):
-        trip_data = []
-        battery_profile = BatteryProfile(capacity=schedule.electric_vehicle.max_battery_capacity,
-                                         hourPercentageCharge=schedule.electric_vehicle.max_charging_power)
-        for index, point_schedule in enumerate(schedule.point_schedules.all()):
-            battery = Battery(inputEnergyLevel=point_schedule.charge_percent, batteryProfile=battery_profile,
-                              outputEnergyLevel=point_schedule.expected_charge_percent)
-            trip_stop = TripStop(id=point_schedule.schedule.electric_vehicle.id, battery=battery, start_date=point_schedule.arrival_time,
-                                 end_date=point_schedule.departure_time)
-            trip_data.append(trip_stop)
-        return trip_data
+def get_trip_stop(point_schedule: PointSchedule) -> TripStop:
+    electric_vehicle = point_schedule.schedule.electric_vehicle
+    battery_profile = BatteryProfile(capacity=electric_vehicle.max_battery_capacity,
+                                     hourPercentageCharge=electric_vehicle.max_charging_power)
+    battery = Battery(batteryProfile=battery_profile,
+                      inputEnergyLevel=point_schedule.charge_percent,
+                      outputEnergyLevel=point_schedule.expected_charge_percent)
+    trip_stop = TripStop(id=electric_vehicle.id,
+                         battery=battery,
+                         start_date=point_schedule.arrival_time,
+                         end_date=point_schedule.departure_time)
+    return trip_stop

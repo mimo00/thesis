@@ -29,5 +29,6 @@ def trigger_aggregator(request):
     try:
         generate_decision()
         return render(request, 'aggregation/success.html')
-    except Exception:
+    except Exception as e:
+        raise
         return render(request, 'aggregation/fail.html')

@@ -59,29 +59,21 @@ class FetchingSchedulesDemo(DemoGenerator):
     def generate_schedule(self, date, ev):
         points = ChargingPoint.objects.all()
         home, work = choices(points, k=2)
-        times = self.generate_times(date) #list of 6 dates
+        times = self.generate_times(date) #list of 3 dates
         with freeze_time(date):
             schedule = Schedule.objects.create(mode=Schedule.HOME_WORK_HOME, electric_vehicle=ev)
-        PointSchedule.objects.create(arrival_time=times[0], departure_time=times[1], charge_percent=50.00,
-                                     expected_charge_percent=70.00, schedule=schedule, point=home)
-        PointSchedule.objects.create(arrival_time=times[2], departure_time=times[3], charge_percent=50.00,
+        PointSchedule.objects.create(arrival_time=date.replace(hour=0, minute=0), departure_time=times[0],
+                                     charge_percent=50.00, expected_charge_percent=70.00, schedule=schedule, point=home)
+        PointSchedule.objects.create(arrival_time=date.replace(hour=8, minute=0), departure_time=times[1], charge_percent=50.00,
                                      expected_charge_percent=60.00, schedule=schedule, point=work)
-        PointSchedule.objects.create(arrival_time=times[4], departure_time=times[5], charge_percent=30.00,
+        PointSchedule.objects.create(arrival_time=date.replace(hour=18, minute=0), departure_time=times[2], charge_percent=30.00,
                                      expected_charge_percent=40.00, schedule=schedule, point=home)
 
     def generate_times(self, date):
-        times = []
-        for hour in self.generate_hours():
-            times.append(date.replace(hour=hour, minute=randint(0, 59)))
-        return times
-
-    def generate_hours(self):
-        hours = []
-        start_index = 0
-        for i in range(6):
-            hours.append(randint(start_index, start_index+3))
-            start_index += 4
-        return hours
+        t1 = date.replace(hour=7, minute=randint(0, 59))
+        t2 = date.replace(hour=15, minute=randint(0, 59))
+        t3 = date.replace(hour=23, minute=randint(0, 59))
+        return [t1, t2, t3]
 
 
 demos = [UserDemo, ChargingPointDemo, FetchingSchedulesDemo]
