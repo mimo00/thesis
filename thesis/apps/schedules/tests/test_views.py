@@ -15,20 +15,18 @@ class TestScheduleViewSet:
         data = {
             "electric_vehicle": ev.id,
             "mode": "hh",
+            "charge_percent": 10,
+            "trip_percent": 60,
             "point_schedules": [
                 {
                     "point": home.id,
                     "arrival_time": datetime(2019, 3, 10, 8, 30, 0),
                     "departure_time": datetime(2019, 3, 10, 8, 30, 0),
-                    "charge_percent": 10,
-                    "expected_charge_percent": 60
                 },
                 {
                     "point": home.id,
                     "arrival_time": datetime(2019, 3, 10, 8, 30, 0),
                     "departure_time": datetime(2019, 3, 10, 8, 30, 0),
-                    "charge_percent": 5,
-                    "expected_charge_percent": 100
                 }
             ]
         }
@@ -50,20 +48,18 @@ class TestScheduleViewSet:
         data = {
             "electric_vehicle": ev.id,
             "mode": "hh",
+            "charge_percent": 10,
+            "trip_percent": 60,
             "point_schedules": [
                 {
                     "point": home.id,
                     "arrival_time": datetime(2019, 3, 10, 8, 30, 0),
                     "departure_time": datetime(2019, 3, 10, 8, 30, 0),
-                    "charge_percent": 10,
-                    "expected_charge_percent": 60
                 },
                 {
                     "point": home.id,
                     "arrival_time": datetime(2019, 3, 10, 8, 30, 0),
                     "departure_time": datetime(2019, 3, 10, 8, 30, 0),
-                    "charge_percent": 5,
-                    "expected_charge_percent": 100
                 }
             ]
         }
@@ -78,13 +74,13 @@ class TestScheduleViewSet:
         data = {
             "electric_vehicle": ev.id,
             "mode": "hh",
+            "charge_percent": 10,
+            "trip_percent": 60,
             "point_schedules": [
                 {
                     "point": home.id,
                     "arrival_time": datetime(2019, 3, 10, 8, 30, 0),
                     "departure_time": datetime(2019, 3, 10, 8, 30, 0),
-                    "charge_percent": 10,
-                    "expected_charge_percent": 60
                 }
             ]
         }

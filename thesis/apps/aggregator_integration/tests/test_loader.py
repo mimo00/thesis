@@ -1,33 +1,26 @@
 from datetime import datetime
 
 import pytest
-from pytz import UTC
+from freezegun import freeze_time
 
-from apps.aggregator_integration.loader import AggregatorNodeDecisionSchema
-from apps.schedules.factories import PointScheduleFactory, ElectricVehicleFactory
+from apps.aggregator_integration.loader import AggregatorGroupDecisionSchema
+from apps.schedules.factories import ElectricVehicleFactory, ScheduleFactory
 
 
 @pytest.mark.django_db
 class TestLoading:
     def test_loading_data(self):
-        test_arrival_1 = datetime(year=2019, month=4, day=15, hour=17, minute=3, tzinfo=UTC)
-        test_departure_1 = datetime(year=2019, month=4, day=15, hour=23, minute=20, tzinfo=UTC)
-        test_arrival_2 = datetime(year=2019, month=4, day=15, hour=1, minute=10, tzinfo=UTC)
-        test_departure_2 = datetime(year=2019, month=4, day=15, hour=6, minute=20, tzinfo=UTC)
-        ev = ElectricVehicleFactory()
-        ch_l_1 = PointScheduleFactory(
-            arrival_time=test_arrival_1, departure_time=test_departure_1, schedule__electric_vehicle=ev)
-        ch_l_2 = PointScheduleFactory(
-            arrival_time=test_arrival_2, departure_time=test_departure_2, schedule__electric_vehicle=ev)
+        ev1 = ElectricVehicleFactory()
+        ev2 = ElectricVehicleFactory()
+        with freeze_time(datetime.now()):
+            ScheduleFactory(electric_vehicle=ev1)
+            ScheduleFactory(electric_vehicle=ev2)
         data = {
             "disaggregatedTripsData": [{
                     "data": {
-                        'id': ev.id,
-                        'localization': 1,
+                        'id': ev1.id,
                         'plugInSchedule': {
-                            'schedule': [
-                                False, False, False, False, False, False, False, False, False, False, False, False,
-                                False, False, False, False, False, False, True, True, True, True, True, True],
+                            'schedule': [],
                         },
                         'battery': {
                             'batteryProfile': {
@@ -39,16 +32,12 @@ class TestLoading:
                         }
                     },
                     "coverage": 0.0,
-                    "chargeHours": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                    "chargeHours": [0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
                 }, {
                     "data": {
-                        'id': ev.id,
-                        'localization': 1,
+                        'id': ev2.id,
                         'plugInSchedule': {
-                            'schedule': [
-                                False, True, True, True, True, True, False, False, False, False, False, False,
-                                False, False, False, False, False, False, False, False, False, False, False, False
-                            ],
+                            'schedule': [],
                         },
                         'battery': {
                             'batteryProfile': {
@@ -69,14 +58,10 @@ class TestLoading:
             "totalHourCoverage": 14.23,
             "totalEnergyLoss": 2.45
         }
-        decision, point_schedule_decisions = AggregatorNodeDecisionSchema().load(data)
+        decision, schedule_decisions = AggregatorGroupDecisionSchema().load(data)
         assert decision.energy_coverage == 10.34
         assert decision.hour_coverage == 14.23
         assert decision.energy_loss == 2.45
-        assert len(point_schedule_decisions) == 2
-        assert point_schedule_decisions[0].point_schedule == ch_l_1
-        assert point_schedule_decisions[0].start_time == None
-        assert point_schedule_decisions[1].point_schedule == ch_l_2
-        assert point_schedule_decisions[1].start_time == datetime(year=2019, month=4, day=15, hour=3, minute=0, tzinfo=UTC)
-        assert point_schedule_decisions[1].end_time == datetime(year=2019, month=4, day=15, hour=6, minute=0, tzinfo=UTC)
-
+        assert len(schedule_decisions) == 2
+        assert len(schedule_decisions[0][1]) == 2
+        assert len(schedule_decisions[1][1]) == 1

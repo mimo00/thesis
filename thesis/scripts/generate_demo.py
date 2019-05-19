@@ -76,7 +76,7 @@ class FetchingSchedulesDemo(DemoGenerator):
         return [t1, t2, t3]
 
 
-demos = [UserDemo, ChargingPointDemo, FetchingSchedulesDemo]
+demos = [] #[UserDemo, ChargingPointDemo, FetchingSchedulesDemo]
 
 
 def run():

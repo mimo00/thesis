@@ -5,7 +5,7 @@ from rest_framework import mixins
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.viewsets import GenericViewSet
 
-from apps.aggregator_integration.services import generate_decision
+# from apps.aggregator_integration.services import generate_decision
 from apps.schedules.models import Schedule
 from apps.schedules.serializers import ScheduleSerializer
 
@@ -27,7 +27,7 @@ def auction_detail(request):
 
 def trigger_aggregator(request):
     try:
-        generate_decision()
+        # generate_decision()
         return render(request, 'aggregation/success.html')
     except Exception as e:
         raise

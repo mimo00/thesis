@@ -45,6 +45,8 @@ class ScheduleFactory(factory.DjangoModelFactory):
 
     electric_vehicle = factory.SubFactory(ElectricVehicleFactory)
     mode = models.Schedule.HOME_HOME
+    charge_percent = 26
+    trip_percent = 90
 
 
 class PointScheduleFactory(factory.DjangoModelFactory):
@@ -53,8 +55,6 @@ class PointScheduleFactory(factory.DjangoModelFactory):
 
     arrival_time = datetime(year=2019, month=7, day=24, hour=6, minute=30)
     departure_time = datetime(year=2019, month=7, day=24, hour=6, minute=30)
-    charge_percent = 32.58
-    expected_charge_percent = 99.99
     schedule = factory.SubFactory(ScheduleFactory)
     point = factory.SubFactory(ChargingPointFactory)
 

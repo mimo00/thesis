@@ -5,7 +5,7 @@ from apps.schedules.models import Schedule, PointSchedule
 class PointScheduleSerializer(serializers.ModelSerializer):
     class Meta:
         model = PointSchedule
-        fields = ("departure_time", "arrival_time", "point", "expected_charge_percent", "charge_percent")
+        fields = ("departure_time", "arrival_time", "point")
 
 
 class ScheduleSerializer(serializers.ModelSerializer):
@@ -13,7 +13,7 @@ class ScheduleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Schedule
-        fields = ("mode", "point_schedules", "electric_vehicle")
+        fields = ("mode", "point_schedules", "electric_vehicle", "trip_percent", "charge_percent")
 
     def validate(self, data):
         if data['mode'] == Schedule.HOME_HOME and len(data['point_schedules']) != 2:

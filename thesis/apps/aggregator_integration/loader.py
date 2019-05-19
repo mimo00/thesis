@@ -1,32 +1,30 @@
 from datetime import datetime
+from typing import List
 
 import marshmallow
 from marshmallow import fields, post_load, ValidationError, EXCLUDE
 from pytz import UTC
 
-from apps.aggregator_integration.time_utils import get_index_range, get_date_range
-from apps.decisions.models import AggregatorDecision, PointScheduleDecision, AggregatorNodeDecision
-from apps.schedules.models import PointSchedule
+from apps.aggregator_integration.time_utils import get_index_range, get_time_ranges
+from apps.decisions.models import ScheduleDecision, AggregatorGroupDecision, DateRangeDecision
+from apps.schedules.models import PointSchedule, Schedule
 
 
-class ChargingLocalizationDecisionSchema(marshmallow.Schema):
+class ScheduleDecisionSchema(marshmallow.Schema):
     coverage = fields.Float(required=True)
     chargeHours = fields.List(fields.Integer(), required=True, validate=lambda x: len(x) == 24)
     data = fields.Dict()
 
     @post_load
-    def create(self, data) -> PointScheduleDecision:
-        point_schedule = self.get_point_schedule(data["data"])
-        date_range = get_date_range(data["chargeHours"], point_schedule.arrival_time)
-        return PointScheduleDecision(coverage=data["coverage"], start_time=date_range.start,
-                                             end_time=date_range.end, point_schedule=point_schedule)
+    def create(self, data) -> (ScheduleDecision, List[DateRangeDecision]):
+        schedule = self.get_point_schedule(data["data"])
+        schedule_decision = ScheduleDecision(coverage=data["coverage"], schedule=schedule)
+        date_ranges = self.get_date_ranges_decision(data["chargeHours"])
+        return schedule_decision, date_ranges
 
     def get_point_schedule(self, data):
-        arrival_hour, departure_hour = self.get_hours(data["plugInSchedule"]["schedule"])
         now = datetime.now(tz=UTC)
-        return PointSchedule.objects.get(
-            schedule__electric_vehicle=data["id"], arrival_time__hour__lte=arrival_hour,
-            departure_time__hour__gte=departure_hour, schedule__date__date=now)
+        return Schedule.objects.get(electric_vehicle=data["id"], date__date=now)
 
     def get_hours(self, charge_hours):
         index_range = get_index_range(charge_hours)
@@ -35,17 +33,24 @@ class ChargingLocalizationDecisionSchema(marshmallow.Schema):
         else:
             raise ValidationError("Nor valid time schedule")
 
+    def get_date_ranges_decision(self, plugin_schedule) -> List[DateRangeDecision]:
+        time_ranges = get_time_ranges(plugin_schedule)
+        date_ranges_decision = []
+        for time_range in time_ranges:
+            date_ranges_decision.append(DateRangeDecision(start_time=time_range[0], end_time=time_range[1]))
+        return date_ranges_decision
 
-class AggregatorNodeDecisionSchema(marshmallow.Schema):
+
+class AggregatorGroupDecisionSchema(marshmallow.Schema):
     totalEnergyCoverage = fields.Float(required=True)
     totalHourCoverage = fields.Float(required=True)
     totalEnergyLoss = fields.Float(required=True)
     totalNumberOfSchemes = fields.Integer(required=True)
-    disaggregatedTripsData = fields.List(fields.Nested(ChargingLocalizationDecisionSchema(unknown=EXCLUDE)))
+    disaggregatedTripsData = fields.List(fields.Nested(ScheduleDecisionSchema(unknown=EXCLUDE)))
 
     @post_load
     def create(self, data):
-        decision = AggregatorNodeDecision(is_success=True, energy_loss=data["totalEnergyLoss"],
-                                          energy_coverage=data["totalEnergyCoverage"],
-                                          hour_coverage=data["totalHourCoverage"])
+        decision = AggregatorGroupDecision(is_success=True, energy_loss=data["totalEnergyLoss"],
+                                           energy_coverage=data["totalEnergyCoverage"],
+                                           hour_coverage=data["totalHourCoverage"])
         return decision, data['disaggregatedTripsData']
