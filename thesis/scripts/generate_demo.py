@@ -15,17 +15,15 @@ class DemoGenerator:
 
 
 class UserDemo(DemoGenerator):
+    CARS_PER_USERS = 11
+
     def generate(self):
         User = get_user_model()
         User.objects.create_superuser("root", "root@root.com", "root")
-        names = ["wilder", "joshua", "parker", "ortiz", "kownacki"]
+        names = ["wilder", "joshua", "parker", "ortiz", "kownacki", "ali", "louis", "johson", "marciano", "dempsey", "foreman"]
         for name in names:
             user = User.objects.create_user(name, name + "@gmail.com", name)
-            for _ in range(3):
-                ElectricVehicle.objects.create(
-                    max_charging_power=randrange(10, 30), user=user,
-                    min_battery_capacity=randrange(5, 10), max_battery_capacity=randrange(15, 20)
-                )
+            for _ in range(self.CARS_PER_USERS):
                 ElectricVehicle.objects.create(
                     max_charging_power=randrange(10, 30), user=user,
                     min_battery_capacity=randrange(5, 10), max_battery_capacity=randrange(15, 20)
@@ -61,13 +59,14 @@ class FetchingSchedulesDemo(DemoGenerator):
         home, work = choices(points, k=2)
         times = self.generate_times(date) #list of 3 dates
         with freeze_time(date):
-            schedule = Schedule.objects.create(mode=Schedule.HOME_WORK_HOME, electric_vehicle=ev)
+            schedule = Schedule.objects.create(mode=Schedule.HOME_WORK_HOME, electric_vehicle=ev, charge_percent=50,
+                                               trip_percent=60)
         PointSchedule.objects.create(arrival_time=date.replace(hour=0, minute=0), departure_time=times[0],
-                                     charge_percent=50.00, expected_charge_percent=70.00, schedule=schedule, point=home)
-        PointSchedule.objects.create(arrival_time=date.replace(hour=8, minute=0), departure_time=times[1], charge_percent=50.00,
-                                     expected_charge_percent=60.00, schedule=schedule, point=work)
-        PointSchedule.objects.create(arrival_time=date.replace(hour=18, minute=0), departure_time=times[2], charge_percent=30.00,
-                                     expected_charge_percent=40.00, schedule=schedule, point=home)
+                                     schedule=schedule, point=home)
+        PointSchedule.objects.create(arrival_time=date.replace(hour=8, minute=0), departure_time=times[1],
+                                     schedule=schedule, point=work)
+        PointSchedule.objects.create(arrival_time=date.replace(hour=18, minute=0), departure_time=times[2],
+                                     schedule=schedule, point=home)
 
     def generate_times(self, date):
         t1 = date.replace(hour=7, minute=randint(0, 59))
@@ -76,7 +75,7 @@ class FetchingSchedulesDemo(DemoGenerator):
         return [t1, t2, t3]
 
 
-demos = [] #[UserDemo, ChargingPointDemo, FetchingSchedulesDemo]
+demos = [UserDemo, ChargingPointDemo, FetchingSchedulesDemo]
 
 
 def run():
