@@ -1,11 +1,13 @@
 import datetime
 
 from django.shortcuts import render, redirect
+from django.views import View
 from rest_framework import mixins
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.viewsets import GenericViewSet
 
 # from apps.aggregator_integration.services import generate_decision
+from apps.schedules.forms import TriggerAggregationForm
 from apps.schedules.models import Schedule
 from apps.schedules.serializers import ScheduleSerializer
 
@@ -25,10 +27,8 @@ def auction_detail(request):
                   {'number_of_today_schedules': number_of_today_schedules})
 
 
-def trigger_aggregator(request):
-    try:
-        # generate_decision()
-        return render(request, 'aggregation/success.html')
-    except Exception as e:
-        raise
-        return render(request, 'aggregation/fail.html')
+
+class TriggerAggregationView(View):
+    def get(self, request):
+        form = TriggerAggregationForm()
+        return render(request, 'aggregation/aggregation.html', {'form': form})

@@ -67,3 +67,8 @@
 #     for point_schedule_decision in point_schedule_decisions:
 #         point_schedule_decision.decision = node_decision
 #         point_schedule_decision.save()
+
+COVERAGE = 20
+MINIMUM_ENERGY_OFFER = 1000
+ALL_TOGETHER = 'all_together'
+BY_DESTINATIONS = 'by_descination'
