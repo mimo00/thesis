@@ -13,7 +13,7 @@ urlpatterns = router.urls
 
 urlpatterns += [
     url(r'^auction$', auction_detail, name='auction'),
-    url(r'^trigger-aggregator', TriggerAggregationView.as_view(), name='trigger_aggregator')
+    url(r'^trigger-aggregation', TriggerAggregationView.as_view(), name='trigger_aggregation')
 ]
 
 urlpatterns += [path("", RedirectView.as_view(url="/admin"))]

@@ -5,7 +5,7 @@ Run aggregation
 {% endblock %}
 
 {% block content %}
-<form action="/trigger-aggregator/" method="post">
+<form action="/trigger-aggregation/" method="post">
     {% csrf_token %}
     {{ form.as_p }}
     <input type="submit" value="Run aggregation">

@@ -1,74 +1,94 @@
-# import json
-# import os
-# import shutil
-# from contextlib import contextmanager
-# from datetime import datetime, time
+import datetime
+import json
+import os
+import shutil
+from contextlib import contextmanager
 
-# from dateutil.tz import UTC
-# from marshmallow import EXCLUDE
-#
-# from aggregator.settings import TMP_DATA_DIR, DEADLINE_HOUR_TO_SEND_SCHEDULE, \
-#     DUMP_TRIPS_NAME, DISAGGREGATION_NAME
-# from apps.aggregator_integration.aggregator_commands import aggregate, generate_energy_market, disaggregation
-# from apps.aggregator_integration.generator import get_trip_data
-# from apps.aggregator_integration.loader import AggregatorNodeDecisionSchema
-# from apps.decisions.models import AggregatorDecision
-# from apps.schedules.models import Node
-#
-#
-# def generate_decision():
-#     nodes = Node.objects.all()
-#     today = datetime.now()
-#     for node in nodes:
-#         generate_decision_for_node(today.date(), node)
-#
-#
-# @contextmanager
-# def tmp_dir(path):
-#     try:
-#         os.mkdir(path)
-#     except OSError:
-#         shutil.rmtree(path)
-#         os.mkdir(path)
-#     yield path
-#     pass
-#
-#
-# def generate_decision_for_node(date: datetime.date, node: Node):
-#     path = get_path(date, node)
-#     with tmp_dir(path) as path:
-#         data = get_trip_data(
-#             start_date=datetime.combine(date, time(hour=0, minute=0, tzinfo=UTC)),
-#             end_date=datetime.combine(date, time(hour=DEADLINE_HOUR_TO_SEND_SCHEDULE, minute=0, tzinfo=UTC)),
-#             node=node
-#         )
-#         with open(os.path.join(path, DUMP_TRIPS_NAME), "w+") as outfile:
-#             json.dump(data, outfile)
-#         aggregate(path)
-#         generate_energy_market(path)
-#         disaggregation(path)
-#         with open(os.path.join(path, os.path.join(path, DISAGGREGATION_NAME+".json")), "r") as file:
-#             data = json.load(file)
-#             load_aggregated_decisions(date, node, data)
-#
-#
-# def get_path(date: datetime.date, node: Node):
-#     name_of_dir = f"{node.name}_{date.strftime('%Y_%m_%d')}"
-#     return os.path.join(TMP_DATA_DIR, name_of_dir)
-#
-#
-# def load_aggregated_decisions(date: datetime, node: Node, data):
-#     decision_data = data["disaggregationResultEntries"][0]
-#     node_decision, point_schedule_decisions = AggregatorNodeDecisionSchema(unknown=EXCLUDE).load(decision_data)
-#     decision, created = AggregatorDecision.objects.get_or_create(decision_date=date, defaults={'receive_date': datetime.now()})
-#     node_decision.decision = decision
-#     node_decision.node = node
-#     node_decision.save()
-#     for point_schedule_decision in point_schedule_decisions:
-#         point_schedule_decision.decision = node_decision
-#         point_schedule_decision.save()
+from marshmallow import EXCLUDE
 
-COVERAGE = 20
+from aggregator.settings import TMP_DATA_DIR, DUMP_TRIPS_NAME, DISAGGREGATION_NAME
+from apps.aggregator_integration.aggregator_commands import aggregate, generate_energy_market, disaggregation
+from apps.aggregator_integration.generator import get_trips_data
+from apps.aggregator_integration.loader import AggregatorGroupDecisionSchema
+from apps.decisions.models import AggregatorDecision
+from apps.schedules.models import Schedule
+
+COVERAGE = 50
 MINIMUM_ENERGY_OFFER = 1000
 ALL_TOGETHER = 'all_together'
-BY_DESTINATIONS = 'by_descination'
+BY_DESTINATIONS = 'by_destcination'
+
+
+
+@contextmanager
+def tmp_dir(path):
+    try:
+        os.mkdir(path)
+    except OSError:
+        shutil.rmtree(path)
+        os.mkdir(path)
+    yield path
+    pass
+
+
+class AggregationService:
+    def __init__(self, date: datetime.date, method=None, minimum_energy_offer=None, coverage=None):
+        self.date = date
+        self.method = method if method else ALL_TOGETHER
+        self.minimum_energy_offer = minimum_energy_offer if minimum_energy_offer else MINIMUM_ENERGY_OFFER
+        self.coverage = coverage if coverage else COVERAGE
+
+    def generate_decision(self) -> AggregatorDecision:
+        aggregate_decision = AggregatorDecision.objects.filter(decision_date=self.date)
+        if aggregate_decision.exists():
+            aggregate_decision.delete()
+        aggregate_decision = AggregatorDecision.objects.create(decision_date=self.date,
+                                                               receive_date=datetime.datetime.now(),
+                                                               mode=self.get_mode())
+        group_of_schedules = self.get_group_of_schedules()
+        for schedules in group_of_schedules:
+            self.generate_schedule(schedules, aggregate_decision)
+        return aggregate_decision
+
+    def get_mode(self):
+        a = {
+            ALL_TOGETHER: AggregatorDecision.GLOBAL,
+            BY_DESTINATIONS: AggregatorDecision.GLOBAL,
+        }
+        return a[self.method]
+
+    def get_group_of_schedules(self):
+        return [Schedule.objects.filter(date__date=self.date)]
+
+    def generate_schedule(self, schedules, aggregate_decision):
+        path = self.get_path()
+        with tmp_dir(path) as path:
+            self.dump_schedules(path, schedules)
+            aggregate(path, self.minimum_energy_offer)
+            generate_energy_market(path, self.coverage)
+            disaggregation(path)
+            self.load_aggregated_decisions(aggregate_decision)
+
+    def dump_schedules(self, path, schedules):
+        data = get_trips_data(schedules)
+        with open(os.path.join(path, DUMP_TRIPS_NAME), "w+") as outfile:
+            json.dump(data, outfile)
+
+    def load_aggregated_decisions(self, aggregate_decision):
+        path = self.get_path()
+        with open(os.path.join(path, os.path.join(path, DISAGGREGATION_NAME + ".json")), "r") as file:
+            data = json.load(file)
+            decision_data = data["disaggregationResultEntries"][0]
+            group_decision, schedule_decisions = AggregatorGroupDecisionSchema(unknown=EXCLUDE).load(decision_data)
+            group_decision.decision = aggregate_decision
+            group_decision.save()
+            for schedule_decision, date_range_decisions in schedule_decisions:
+                schedule_decision.group_decision = group_decision
+                schedule_decision.save()
+                for date_range_decision in date_range_decisions:
+                    date_range_decision.schedule_decision = schedule_decision
+                    date_range_decision.save()
+
+    def get_path(self):
+        name_of_dir = f"{self.method}_{self.date.strftime('%Y_%m_%d')}"
+        return os.path.join(TMP_DATA_DIR, name_of_dir)
