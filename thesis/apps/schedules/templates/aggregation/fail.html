@@ -1,16 +1,9 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-    <style>
-        body {
-            background-image: url("{% static "background_car.jpg" %}");
-        }
-    </style>
-</head>
-<body>
+{% extends "base.html" %}
+
+{% block title %}
+Success aggregation
+{% endblock %}
+
+{% block content %}
     <h1 style="text-align:center"> Fail !!! </h1>
-</body>
-</html>
+{% endblock %}

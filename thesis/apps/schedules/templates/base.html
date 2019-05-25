@@ -1,0 +1,20 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+    <style>
+        body {
+            background-image: url("{% static "background_car.jpg" %}");
+        }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <div align="center">
+        {% block content %}
+        {% endblock %}
+    </div>
+</body>
+</html>

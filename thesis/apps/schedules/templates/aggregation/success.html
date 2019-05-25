@@ -1,17 +1,49 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-    <style>
-        body {
-            background-image: url("{% static "background_car.jpg" %}");
-        }
-    </style>
-</head>
-<body>
-    <h1 style="text-align:center"> Success !!! </h1>
+{% extends "base.html" %}
 
-</body>
-</html>
+{% block title %}
+Success aggregation
+{% endblock %}
+
+{% block head %}
+<style>
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+        padding: 0.25rem;
+        text-align: left;
+        border: 1px solid #ccc;
+    }
+
+    .hover {
+        background: yellow;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 style="text-align:center"> Success !!! </h1>
+<h2>Aggregator manage to aggregate {{ aggregated_schedules|length }} schedules into {{ groups| length }} groups</h2>
+<table>
+    <tr>
+        <th>Group index</th>
+        <th>Energy coverage</th>
+        <th>Hour coverage</th>
+        <th>Energy loss</th>
+    </tr>
+    {% for group in groups %}
+    <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ group.energy_coverage }}</td>
+        <td>{{ group.hour_coverage }}</td>
+        <td>{{ group.energy_loss }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h2>To return to aggregation process: <a href="{% url 'trigger_aggregation' %}">aggregation process</a></h2>
+<h2>To go to admin site: <a href="{% url 'admin:index' %}">admin site</a></h2>
+{% endblock %}
+

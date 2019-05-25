@@ -7,7 +7,7 @@ import attr
 from marshmallow import fields
 
 # serialization Obj -> JSON
-from apps.aggregator_integration.time_utils import get_schedule
+from apps.aggregator_integration.time_utils import get_schedule, get_plugin_schedule
 from apps.schedules.models import Schedule, Node, PointSchedule
 from aggregator.settings import DEADLINE_HOUR_TO_SEND_SCHEDULE
 
@@ -33,10 +33,6 @@ class TripDataSchema(marshmallow.Schema):
     tripsData = fields.Nested(TripStopSchema, many=True)
 
 
-def get_beginning_of_day(date):
-    return datetime(year=date.year, month=date.month, day=date.day, hour=0, minute=0, second=0, tzinfo=date.tzinfo)
-
-
 @attr.s
 class BatteryProfile:
     capacity = attr.ib()
@@ -51,41 +47,34 @@ class Battery:
 
 
 @attr.s
-class TripStop:
+class TripData:
     id: int = attr.ib()
     battery: Battery = attr.ib()
-    start_date: datetime = attr.ib()
-    end_date: datetime = attr.ib()
-
-    @property
-    def plugInSchedule(self) -> List[int]:
-        return get_schedule(self.start_date.hour, self.end_date.hour)
+    plugInSchedule = attr.ib()
 
 
-def get_trip_data(start_date: datetime, end_date: datetime, node: Node):
-    trips_stops = get_trip_stops(start_date, end_date, node)
-    return TripDataSchema().dump({"tripsData": trips_stops})
+def get_trips_data(schedules: List[Schedule]):
+    trips_data = []
+    for schedule in schedules:
+        trips_data.append(get_trip_data(schedule))
+    return TripDataSchema().dump({"tripsData": trips_data})
 
 
-def get_trip_stops(start_date: datetime, end_date: datetime, node: Node) -> List[TripStop]:
-    trip_stops = []
-    point_schedules = (PointSchedule.objects
-                       .filter(point__node=node, schedule__date__range=(start_date, end_date))
-                       .select_related('schedule__electric_vehicle'))
-    for point_schedule in point_schedules:
-        trip_stops.append(get_trip_stop(point_schedule))
-    return trip_stops
-
-
-def get_trip_stop(point_schedule: PointSchedule) -> TripStop:
-    electric_vehicle = point_schedule.schedule.electric_vehicle
+def get_trip_data(schedule: Schedule) -> TripData:
+    electric_vehicle = schedule.electric_vehicle
     battery_profile = BatteryProfile(capacity=electric_vehicle.max_battery_capacity,
                                      hourPercentageCharge=electric_vehicle.max_charging_power)
     battery = Battery(batteryProfile=battery_profile,
-                      inputEnergyLevel=point_schedule.charge_percent,
-                      outputEnergyLevel=point_schedule.expected_charge_percent)
-    trip_stop = TripStop(id=electric_vehicle.id,
-                         battery=battery,
-                         start_date=point_schedule.arrival_time,
-                         end_date=point_schedule.departure_time)
+                      inputEnergyLevel=schedule.charge_percent,
+                      outputEnergyLevel=schedule.charge_percent + schedule.trip_percent)
+    trip_stop = TripData(id=electric_vehicle.id, battery=battery,
+                         plugInSchedule=get_plugin_schedule(get_time_ranges(schedule.point_schedules)))
     return trip_stop
+
+
+def get_time_ranges(point_schedules: List[PointSchedule]):
+    time_ranges = []
+    for point_schedule in point_schedules.all():
+        time_ranges.append((point_schedule.arrival_time.time(), point_schedule.departure_time.time()))
+    return time_ranges
+

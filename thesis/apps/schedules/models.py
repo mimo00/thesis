@@ -33,6 +33,8 @@ class Schedule(models.Model):
     )
     date = models.DateTimeField(auto_now=True)
     mode = models.CharField(max_length=3, choices=TYPES)
+    charge_percent = models.IntegerField()
+    trip_percent = models.IntegerField()
     electric_vehicle = models.ForeignKey(ElectricVehicle, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -42,8 +44,8 @@ class Schedule(models.Model):
 class PointSchedule(models.Model):
     arrival_time = models.DateTimeField()
     departure_time = models.DateTimeField()
-    charge_percent = models.DecimalField(max_digits=5, decimal_places=2)
-    expected_charge_percent = models.DecimalField(max_digits=5, decimal_places=2)
-    schedule = models.ForeignKey(Schedule, on_delete=models.CASCADE,
-                                          related_name="point_schedules")
+    schedule = models.ForeignKey(Schedule, on_delete=models.CASCADE, related_name="point_schedules")
     point = models.ForeignKey(ChargingPoint, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Schedule #{self.pk} schedule {self.schedule_id}"
