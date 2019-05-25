@@ -25,6 +25,18 @@ class AggregatorGroupDecision(models.Model):
     energy_loss = models.DecimalField(max_digits=5, decimal_places=2)
 
 
+class Offer(models.Model):
+    group_decision = models.OneToOneField(AggregatorGroupDecision, on_delete=models.CASCADE, related_name="offer")
+    number_of_schemas = models.IntegerField()
+    total_energy = models.IntegerField()
+
+
+class EnergyHourOffer(models.Model):
+    offer = models.ForeignKey(Offer, on_delete=models.CASCADE, related_name="hour_offers")
+    hour_index = models.IntegerField()
+    energy = models.IntegerField()
+
+
 class ScheduleDecision(models.Model):
     group_decision = models.ForeignKey(AggregatorGroupDecision, on_delete=models.CASCADE,
                                        related_name="schedule_decisions")

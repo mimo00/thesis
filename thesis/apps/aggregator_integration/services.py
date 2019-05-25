@@ -6,11 +6,11 @@ from contextlib import contextmanager
 
 from marshmallow import EXCLUDE
 
-from aggregator.settings import TMP_DATA_DIR, DUMP_TRIPS_NAME, DISAGGREGATION_NAME
+from aggregator.settings import TMP_DATA_DIR, DUMP_TRIPS_NAME, DISAGGREGATION_NAME, AGGREGATION_NAME
 from apps.aggregator_integration.aggregator_commands import aggregate, generate_energy_market, disaggregation
 from apps.aggregator_integration.generator import get_trips_data
-from apps.aggregator_integration.loader import AggregatorGroupDecisionSchema
-from apps.decisions.models import AggregatorDecision
+from apps.aggregator_integration.loader import AggregatorGroupDecisionSchema, OfferSchema
+from apps.decisions.models import AggregatorDecision, AggregatorGroupDecision
 from apps.schedules.models import Schedule
 
 COVERAGE = 50
@@ -67,7 +67,8 @@ class AggregationService:
             aggregate(path, self.minimum_energy_offer)
             generate_energy_market(path, self.coverage)
             disaggregation(path)
-            self.load_aggregated_decisions(aggregate_decision)
+            group_decision = self.load_aggregated_decisions(aggregate_decision)
+            self.load_offer_result(path, group_decision)
 
     def dump_schedules(self, path, schedules):
         data = get_trips_data(schedules)
@@ -88,7 +89,14 @@ class AggregationService:
                 for date_range_decision in date_range_decisions:
                     date_range_decision.schedule_decision = schedule_decision
                     date_range_decision.save()
+        return group_decision
 
     def get_path(self):
         name_of_dir = f"{self.method}_{self.date.strftime('%Y_%m_%d')}"
         return os.path.join(TMP_DATA_DIR, name_of_dir)
+
+    def load_offer_result(self, path, group_decision: AggregatorGroupDecision):
+        with open(os.path.join(path, AGGREGATION_NAME + ".json"), "r") as file:
+            data = json.load(file)
+            offer_data = data["aggregatedGroups"]["aggregatedGroupsData"][0]
+            OfferSchema(unknown=EXCLUDE).load({**offer_data, "group_decision": group_decision.id})

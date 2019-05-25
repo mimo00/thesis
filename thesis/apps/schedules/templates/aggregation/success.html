@@ -13,8 +13,8 @@ Success aggregation
 
     th, td {
         padding: 0.25rem;
-        text-align: left;
-        border: 1px solid #ccc;
+        text-align: center;
+        border: 2px solid #000000;
     }
 
     .hover {
@@ -26,22 +26,39 @@ Success aggregation
 {% block content %}
 <h1 style="text-align:center"> Success !!! </h1>
 <h2>Aggregator manage to aggregate {{ aggregated_schedules|length }} schedules into {{ groups| length }} groups</h2>
+{% for group in groups %}
+<h3>Group nr: {{ forloop.counter }}</h3>
 <table>
     <tr>
-        <th>Group index</th>
         <th>Energy coverage</th>
         <th>Hour coverage</th>
         <th>Energy loss</th>
+        <th>Total energy</th>
+        <th>Number of schemas</th>
     </tr>
-    {% for group in groups %}
     <tr>
-        <td>{{ forloop.counter }}</td>
         <td>{{ group.energy_coverage }}</td>
         <td>{{ group.hour_coverage }}</td>
         <td>{{ group.energy_loss }}</td>
+        <td>{{ group.offer.total_energy }}</td>
+        <td>{{ group.offer.number_of_schemas }}</td>
     </tr>
-    {% endfor %}
 </table>
+<br>
+<h4>Energy request</h4>
+<table>
+    <tr>
+        {% for hour_offer in group.offer.hour_offers.all%}
+        <th>{{ hour_offer.hour_index }}</th>
+        {% endfor %}
+    </tr>
+    <tr>
+        {% for hour_offer in group.offer.hour_offers.all%}
+        <td>{{ hour_offer.energy }}</td>
+        {% endfor %}
+    </tr>
+</table>
+{% endfor %}
 
 <h2>To return to aggregation process: <a href="{% url 'trigger_aggregation' %}">aggregation process</a></h2>
 <h2>To go to admin site: <a href="{% url 'admin:index' %}">admin site</a></h2>

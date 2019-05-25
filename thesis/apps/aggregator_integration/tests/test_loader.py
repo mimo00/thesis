@@ -3,7 +3,8 @@ from datetime import datetime
 import pytest
 from freezegun import freeze_time
 
-from apps.aggregator_integration.loader import AggregatorGroupDecisionSchema
+from apps.aggregator_integration.loader import AggregatorGroupDecisionSchema, OfferSchema
+from apps.decisions.factories import AggregatorGroupDecisionFactory
 from apps.schedules.factories import ElectricVehicleFactory, ScheduleFactory
 
 
@@ -17,40 +18,40 @@ class TestLoading:
             ScheduleFactory(electric_vehicle=ev2)
         data = {
             "disaggregatedTripsData": [{
-                    "data": {
-                        'id': ev1.id,
-                        'plugInSchedule': {
-                            'schedule': [],
-                        },
-                        'battery': {
-                            'batteryProfile': {
-                                'hourPercentageCharge': 10.0,
-                                'capacity': 100.0
-                            },
-                            'inputEnergyLevel': 10.0,
-                            'outputEnergyLevel': 99.99
-                        }
+                "data": {
+                    'id': ev1.id,
+                    'plugInSchedule': {
+                        'schedule': [],
                     },
-                    "coverage": 0.0,
-                    "chargeHours": [0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
-                }, {
-                    "data": {
-                        'id': ev2.id,
-                        'plugInSchedule': {
-                            'schedule': [],
+                    'battery': {
+                        'batteryProfile': {
+                            'hourPercentageCharge': 10.0,
+                            'capacity': 100.0
                         },
-                        'battery': {
-                            'batteryProfile': {
-                                'hourPercentageCharge': 10.0,
-                                'capacity': 100.0
-                            },
-                            'inputEnergyLevel': 10.0,
-                            'outputEnergyLevel': 99.99
-                        }
-                    },
-                    "coverage": 50.0,
-                    "chargeHours": [0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                        'inputEnergyLevel': 10.0,
+                        'outputEnergyLevel': 99.99
+                    }
                 },
+                "coverage": 0.0,
+                "chargeHours": [0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+            }, {
+                "data": {
+                    'id': ev2.id,
+                    'plugInSchedule': {
+                        'schedule': [],
+                    },
+                    'battery': {
+                        'batteryProfile': {
+                            'hourPercentageCharge': 10.0,
+                            'capacity': 100.0
+                        },
+                        'inputEnergyLevel': 10.0,
+                        'outputEnergyLevel': 99.99
+                    }
+                },
+                "coverage": 50.0,
+                "chargeHours": [0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            },
 
             ],
             "totalNumberOfSchemes": 2,
@@ -65,3 +66,43 @@ class TestLoading:
         assert len(schedule_decisions) == 2
         assert len(schedule_decisions[0][1]) == 2
         assert len(schedule_decisions[1][1]) == 1
+
+
+@pytest.mark.django_db
+class TestOfferLoading:
+    def test_load_offer(self):
+        group_decision = AggregatorGroupDecisionFactory()
+        data = {
+            "energyDemands": [
+                0.0,
+                388.5,
+                388.5,
+                388.5,
+                388.5,
+                388.5,
+                388.5,
+                388.5,
+                0.0,
+                388.5,
+                388.5,
+                388.5,
+                388.5,
+                388.5,
+                388.5,
+                388.5,
+                0.0,
+                0.0,
+                0.0,
+                388.5,
+                388.5,
+                388.5,
+                388.5,
+                388.5,
+            ],
+            "totalEnergyDemand": 7260.0,
+            "totalNumberOfSchemes": 121,
+        }
+        offer = OfferSchema().load({**data, "group_decision": group_decision.id})
+        assert offer.number_of_schemas == 121
+        assert offer.total_energy == 7260
+        assert len(offer.hour_offers.all()) == 24
