@@ -6,7 +6,7 @@ from marshmallow import fields, post_load, ValidationError, EXCLUDE
 from pytz import UTC
 
 from apps.aggregator_integration.time_utils import get_index_range, get_time_ranges
-from apps.decisions.models import ScheduleDecision, AggregatorGroupDecision, DateRangeDecision
+from apps.decisions.models import ScheduleDecision, AggregatorGroupDecision, DateRangeDecision, Offer, EnergyHourOffer
 from apps.schedules.models import PointSchedule, Schedule
 
 
@@ -54,3 +54,21 @@ class AggregatorGroupDecisionSchema(marshmallow.Schema):
                                            energy_coverage=data["totalEnergyCoverage"],
                                            hour_coverage=data["totalHourCoverage"])
         return decision, data['disaggregatedTripsData']
+
+
+class OfferSchema(marshmallow.Schema):
+    group_decision = fields.Integer()
+    energyDemands = fields.List(fields.Float())
+    totalEnergyDemand = fields.Integer()
+    totalNumberOfSchemes = fields.Integer()
+
+    @post_load
+    def create(self, data):
+        group_decision = AggregatorGroupDecision.objects.get(id=data["group_decision"])
+        offer = Offer.objects.create(
+            number_of_schemas=data["totalNumberOfSchemes"], total_energy=data["totalEnergyDemand"], group_decision=group_decision)
+        for index, energy_value in enumerate(data["energyDemands"]):
+            EnergyHourOffer.objects.create(hour_index=index, energy=energy_value, offer=offer)
+        return offer
+
+
