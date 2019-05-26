@@ -1,9 +1,0 @@
-#!/bin/bash -e
-
-# go back to root dir
-cd "${0%/*}/.."
-
-echo "Generating diagram..."
-echo "Installing pygraphviz package..."
-docker-compose run --rm web bash -c 'apt-get update > /dev/null && apt-get install -y graphviz > /dev/null && pip install pygraphviz && python manage.py graph_models -g -X BaseModel -o db_diagram.png $(ls apps | grep -v "__") && chown 1000:1000 db_diagram.png'
-echo "Diagram available at src/backend/db_diagram.png"
