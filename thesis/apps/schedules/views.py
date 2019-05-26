@@ -46,9 +46,7 @@ class TriggerAggregationView(View):
     def get_success_params(self, decision):
         aggregated_schedules = ScheduleDecision.objects.filter(group_decision__decision=decision)
         groups = AggregatorGroupDecision.objects.filter(decision=decision).prefetch_related('offer__hour_offers')
-        # raise Exception(len(groups[0].offer.hour_offers.all()))
         return {
             "groups": groups,
             "aggregated_schedules": aggregated_schedules,
-            "huj": groups[0].offer
         }
