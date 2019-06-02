@@ -23,6 +23,7 @@ class AggregatorGroupDecision(models.Model):
     energy_coverage = models.DecimalField(max_digits=5, decimal_places=2)
     hour_coverage = models.DecimalField(max_digits=5, decimal_places=2)
     energy_loss = models.DecimalField(max_digits=5, decimal_places=2)
+    group_id = models.IntegerField()
 
 
 class Offer(models.Model):
