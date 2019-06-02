@@ -26,7 +26,7 @@ class UserDemo(DemoGenerator):
             for _ in range(self.CARS_PER_USERS):
                 ElectricVehicle.objects.create(
                     max_charging_power=randrange(10, 30), user=user,
-                    min_battery_capacity=randrange(5, 10), max_battery_capacity=randrange(15, 20)
+                    min_battery_capacity=randrange(5, 10), max_battery_capacity=randrange(25, 30)
                 )
 
 
@@ -57,22 +57,22 @@ class FetchingSchedulesDemo(DemoGenerator):
     def generate_schedule(self, date, ev):
         points = ChargingPoint.objects.all()
         home, work = choices(points, k=2)
-        times = self.generate_times(date) #list of 3 dates
+        times = self.generate_times(date) #list of 6 dates
         with freeze_time(date):
-            schedule = Schedule.objects.create(mode=Schedule.HOME_WORK_HOME, electric_vehicle=ev, charge_percent=50,
-                                               trip_percent=60)
-        PointSchedule.objects.create(arrival_time=date.replace(hour=0, minute=0), departure_time=times[0],
-                                     schedule=schedule, point=home)
-        PointSchedule.objects.create(arrival_time=date.replace(hour=8, minute=0), departure_time=times[1],
-                                     schedule=schedule, point=work)
-        PointSchedule.objects.create(arrival_time=date.replace(hour=18, minute=0), departure_time=times[2],
-                                     schedule=schedule, point=home)
+            schedule = Schedule.objects.create(mode=Schedule.HOME_WORK_HOME, electric_vehicle=ev, charge_percent=randint(1, 100),
+                                               trip_percent=randint(50, 100))
+        PointSchedule.objects.create(arrival_time=times[0], departure_time=times[1], schedule=schedule, point=home)
+        PointSchedule.objects.create(arrival_time=times[2], departure_time=times[3], schedule=schedule, point=work)
+        PointSchedule.objects.create(arrival_time=times[4], departure_time=times[5], schedule=schedule, point=home)
 
     def generate_times(self, date):
-        t1 = date.replace(hour=7, minute=randint(0, 59))
-        t2 = date.replace(hour=15, minute=randint(0, 59))
-        t3 = date.replace(hour=23, minute=randint(0, 59))
-        return [t1, t2, t3]
+        t1 = date.replace(hour=randint(0, 3), minute=0)
+        t2 = date.replace(hour=randint(4, 7), minute=randint(0, 59))
+        t3 = date.replace(hour=randint(8, 11), minute=randint(0, 59))
+        t4 = date.replace(hour=randint(12, 15), minute=randint(0, 59))
+        t5 = date.replace(hour=randint(16, 19), minute=randint(0, 59))
+        t6 = date.replace(hour=randint(20, 23), minute=randint(0, 59))
+        return t1, t2, t3, t4, t5, t6
 
 
 demos = [UserDemo, ChargingPointDemo, FetchingSchedulesDemo]
