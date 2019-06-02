@@ -1,70 +1,71 @@
+{% extends "base.html" %}
+
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-    <style>
-        body {
-            background-image: url("{% static "background_car.jpg" %}");
-        }
-    </style>
-    <script language="JavaScript">
+
+
+{% block title %}
+Aggregation detail
+{% endblock %}
+
+{% block head %}
+<script language="JavaScript">
+    var now = new Date();
+    var hour = 23;
+    var minute = 0;
+    var second = 0;
+    var eventtext = "until fetching schedule deadline ";
+    var endtext = "Today we are not taking charging schedules";
+    var year = now.getYear();
+    if (now.getYear() < 1900)
+        year = now.getYear() + 1900;
+    var end = new Date(year, now.getMonth(), now.getDate(), hour, minute, second);
+
+    function timeleft() {
         var now = new Date();
-        var hour = 23;
-        var minute = 0;
-        var second = 0;
-        var eventtext = "until fetching schedule deadline ";
-        var endtext = "Today we are not taking charging schedules";
-        var year = now.getYear();
-        if(now.getYear() < 1900)
-		    year = now.getYear() + 1900;
-        var end = new Date(year, now.getMonth(), now.getDate(), hour, minute, second);
-        function timeleft(){
-            var now = new Date();
-            var sec = second - now.getSeconds();
-            var min = minute - now.getMinutes();
-            var hr = hour - now.getHours();
-            if(sec < 0){
-                sec = (sec+60)%60;
-                min--;
-            }
-            if(min < 0){
-                min = (min+60)%60;
-                hr--;
-            }
-            if(hr < 0){
-                hr = (hr+24)%24;
-            }
-            var sectext = " seconds ";
-            var mintext = " minutes, and ";
-            var hrtext = " hours, ";
-            if (hr === 1)
-                hrtext = " hour, ";
-            if (min === 1)
-                mintext = " minute, and ";
-            if (sec === 1)
-                sectext = " second ";
-            if(now >= end){
-                document.getElementById("timeleft").innerHTML = endtext;
-                clearTimeout(timerID);
-            }
-            else{
-                document.getElementById("timeleft").innerHTML = hr + hrtext + min + mintext + sec + sectext + eventtext;
-            }
-            timerID = setTimeout("timeleft()", 1000);
+        var sec = second - now.getSeconds();
+        var min = minute - now.getMinutes();
+        var hr = hour - now.getHours();
+        if (sec < 0) {
+            sec = (sec + 60) % 60;
+            min--;
         }
-        window.onload = timeleft;
-    </script>
-</head>
-<body>
-    <h1 style="text-align:center">Welcome in aggregator service ! </h1>
-    <h2 style="text-align:center">At the moment we have {{number_of_today_schedules}} schedules for next day </h2>
-    <h2 style="text-align:center"><span id="timeleft"> </span></h2>
-    <div style="text-align:center">
-        <form action="/trigger-aggregation">
-            <input style="font-size: 15px;" type="submit" value="Run aggregation">
-        </form>
-    </div>
-</body>
-</html>
+        if (min < 0) {
+            min = (min + 60) % 60;
+            hr--;
+        }
+        if (hr < 0) {
+            hr = (hr + 24) % 24;
+        }
+        var sectext = " seconds ";
+        var mintext = " minutes, and ";
+        var hrtext = " hours, ";
+        if (hr === 1)
+            hrtext = " hour, ";
+        if (min === 1)
+            mintext = " minute, and ";
+        if (sec === 1)
+            sectext = " second ";
+        if (now >= end) {
+            document.getElementById("timeleft").innerHTML = endtext;
+            clearTimeout(timerID);
+        } else {
+            document.getElementById("timeleft").innerHTML = hr + hrtext + min + mintext + sec + sectext + eventtext;
+        }
+        timerID = setTimeout("timeleft()", 1000);
+    }
+
+    window.onload = timeleft;
+</script>
+{% endblock %}
+
+{% block content %}
+<h1 style="text-align:center">Welcome in aggregator service ! </h1>
+<h2 style="text-align:center">At the moment we have {{number_of_today_schedules}} schedules for next day </h2>
+<h2 style="text-align:center"><span id="timeleft"> </span></h2>
+<div style="text-align:center">
+    <form action="/trigger-aggregation">
+        <input style="font-size: 15px;" type="submit" value="Run aggregation">
+    </form>
+</div>
+{% endblock %}
+
