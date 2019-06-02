@@ -76,6 +76,8 @@ def is_in_time_ranges(hour, date_ranges: List[Tuple[datetime.time, datetime.time
 
 
 def is_in_time_range(hour, date_range: Tuple[datetime.time, datetime.time]):
+    if hour == 0 and date_range[0].minute == 0 and date_range[0].hour == 0:
+        return True
     return date_range[0].hour < hour <= date_range[1].hour
 
 
