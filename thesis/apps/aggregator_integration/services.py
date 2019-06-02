@@ -67,8 +67,8 @@ class AggregationService:
             aggregate(path, self.minimum_energy_offer)
             generate_energy_market(path, self.coverage)
             disaggregation(path)
-            group_decision = self.load_aggregated_decisions(aggregate_decision)
-            self.load_offer_result(path, group_decision)
+            self.load_aggregated_decisions(aggregate_decision)
+            self.load_offer_result(path)
 
     def dump_schedules(self, path, schedules):
         data = get_trips_data(schedules)
@@ -79,24 +79,29 @@ class AggregationService:
         path = self.get_path()
         with open(os.path.join(path, os.path.join(path, DISAGGREGATION_NAME + ".json")), "r") as file:
             data = json.load(file)
-            decision_data = data["disaggregationResultEntries"][0]
-            group_decision, schedule_decisions = AggregatorGroupDecisionSchema(unknown=EXCLUDE).load(decision_data)
-            group_decision.decision = aggregate_decision
-            group_decision.save()
-            for schedule_decision, date_range_decisions in schedule_decisions:
-                schedule_decision.group_decision = group_decision
-                schedule_decision.save()
-                for date_range_decision in date_range_decisions:
-                    date_range_decision.schedule_decision = schedule_decision
-                    date_range_decision.save()
+            for decision_data in data["disaggregationResultEntries"]:
+                self.load_aggregated_decision(aggregate_decision, decision_data)
+
+    def load_aggregated_decision(self, aggregate_decision, decision_data):
+        group_decision, schedule_decisions = AggregatorGroupDecisionSchema(unknown=EXCLUDE).load(decision_data)
+        group_decision.decision = aggregate_decision
+        group_decision.group_id = decision_data["groupId"]
+        group_decision.save()
+        for schedule_decision, date_range_decisions in schedule_decisions:
+            schedule_decision.group_decision = group_decision
+            schedule_decision.save()
+            for date_range_decision in date_range_decisions:
+                date_range_decision.schedule_decision = schedule_decision
+                date_range_decision.save()
         return group_decision
 
     def get_path(self):
-        name_of_dir = f"{self.method}_{self.date.strftime('%Y_%m_%d')}"
-        return os.path.join(TMP_DATA_DIR, name_of_dir)
+            name_of_dir = f"{self.method}_{self.date.strftime('%Y_%m_%d')}"
+            return os.path.join(TMP_DATA_DIR, name_of_dir)
 
-    def load_offer_result(self, path, group_decision: AggregatorGroupDecision):
+    def load_offer_result(self, path):
         with open(os.path.join(path, AGGREGATION_NAME + ".json"), "r") as file:
             data = json.load(file)
-            offer_data = data["aggregatedGroups"]["aggregatedGroupsData"][0]
-            OfferSchema(unknown=EXCLUDE).load({**offer_data, "group_decision": group_decision.id})
+            for offer_data in data["aggregatedGroups"]["aggregatedGroupsData"]:
+                aggregator_group = AggregatorGroupDecision.objects.get(decision__decision_date=self.date, group_id=offer_data["groupId"])
+                OfferSchema(unknown=EXCLUDE).load({**offer_data, "group_decision": aggregator_group.id})
