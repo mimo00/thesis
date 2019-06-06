@@ -23,6 +23,7 @@ class AggregatorGroupDecisionFactory(factory.DjangoModelFactory):
     energy_coverage = 75.00
     hour_coverage = 60.00
     energy_loss = 2.5
+    group_id = 1
 
 
 class ScheduleDecisionFactory(factory.DjangoModelFactory):
